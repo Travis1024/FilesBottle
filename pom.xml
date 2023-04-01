@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.travis.filesbottle</groupId>
+    <artifactId>FilesBottle</artifactId>
+    <packaging>pom</packaging>
+    <version>${revision}</version>
+
+    <description>父 pom 文件，管理整个项目的依赖版本信息</description>
+
+    <modules>
+        <module>filesbottle-common</module>
+        <module>filesbottle-gateway</module>
+        <module>filesbottle-search</module>
+        <module>filesbottle-report</module>
+        <module>filesbottle-system</module>
+        <module>filesbottle-member</module>
+        <module>filesbottle-wxm</module>
+        <module>filesbottle-document</module>
+        <module>filesbottle-auth</module>
+    </modules>
+
+
+    <properties>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
+        <!-- 项目版本信息 -->
+        <revision>1.0.0-SNAPSHOT</revision>
+
+        <!-- 统一依赖管理 -->
+        <spring.boot.version>2.7.8</spring.boot.version>
+        <spring.cloud.version>2021.0.5</spring.cloud.version>
+        <spring.cloud.alibaba.version>2021.0.4.0</spring.cloud.alibaba.version>
+        <!-- 工具类相关依赖管理 -->
+        <lombok.version>1.18.24</lombok.version>
+
+        <spring.cloud.gateway.version>3.0.7</spring.cloud.gateway.version>
+
+        <knife4j.version>4.1.0</knife4j.version>
+    </properties>
+
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- 统一依赖管理 -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring.boot.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring.cloud.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.alibaba.cloud</groupId>
+                <artifactId>spring-cloud-alibaba-dependencies</artifactId>
+                <version>${spring.cloud.alibaba.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-starter-gateway</artifactId>
+                <version>${spring.cloud.gateway.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.xiaoymin</groupId>
+                <artifactId>knife4j-openapi3-spring-boot-starter</artifactId>
+                <version>${knife4j.version}</version>
+            </dependency>
+
+        </dependencies>
+    </dependencyManagement>
+
+</project>

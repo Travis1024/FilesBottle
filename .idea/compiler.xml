@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="filesbottle-search" />
+        <module name="filesbottle-gateway" />
+        <module name="filesbottle-system" />
+        <module name="filesbottle-auth" />
+        <module name="filesbottle-common" />
+        <module name="filesbottle-member" />
+        <module name="filesbottle-report" />
+        <module name="filesbottle-wxm" />
+        <module name="filesbottle-document" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="filesbottle-dependencies" target="8" />
+      <module name="test" target="8" />
+    </bytecodeTargetLevel>
+  </component>
+</project>
