@@ -4,9 +4,37 @@ spring:
   application:
     name: gateway-server
 
+
 # 设置启动端口号
 server:
   port: 48080
+
+
+--- # nacos注册中心配置
+spring:
+  cloud:
+    nacos:
+      discovery:
+        namespace: dev
+        server-addr: 140.246.171.8:8848
+        group: gateway
+        username: nacos
+        password: nacos
+
+--- # nacos配置中心配置
+spring:
+  cloud:
+    nacos:
+      config:
+        namespace: dev
+        server-addr: 140.246.171.8:8848
+        group: gateway
+        refresh-enabled: true
+        # 获取配置文件的格式：yaml
+        file-extension: yaml
+        username: nacos
+        password: nacos
+
 
 
 # 设置日志文件名称、日志配置文件路径
@@ -14,3 +42,32 @@ logging:
   config: classpath:logback-dev.xml
   file:
     name: ${user.home}/FilesBottleDev_Logs/${spring.application.name}.log
+
+
+# 设置 knife4j（基于nacos）
+knife4j:
+  enable-aggregation: true
+  nacos:
+    enable: true
+    service-url: http://140.246.171.8:8848/nacos
+    routes:
+      - name: 权限认证服务
+        serviceName: auth-server
+        groupName: auth
+        # dev命名空间
+        namespaceId: b514674f-d278-4190-bffa-5c89be49f72c
+        location: /fbapi/auth/v2/api-docs?group=default
+        swaggerVersion: 2.0
+        servicePath: /fbapi/auth
+      - name: 文档服务
+        serviceName: document-server
+        groupName: document
+        # dev命名空间
+        namespaceId: b514674f-d278-4190-bffa-5c89be49f72c
+        location: /fbapi/document/v2/api-docs?group=default
+        swaggerVersion: 2.0
+        servicePath: /fbapi/document
+
+
+
+

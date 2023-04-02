@@ -1,0 +1,12 @@
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: document-server
+          uri: lb://document-server
+          predicates:
+            - Path=/fbapi/document/**
+        - id: auth-server
+          uri: lb://auth-server
+          predicates:
+            - Path=/fbapi/auth/**

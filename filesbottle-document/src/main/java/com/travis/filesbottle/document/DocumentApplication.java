@@ -1,20 +1,20 @@
-package com.travis.filesbottle.auth;
+package com.travis.filesbottle.document;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 
 /**
- * @ClassName AuthApplication
- * @Description AuthApplication启动类
+ * @ClassName DocumentApplication
+ * @Description 文件模块启动类
  * @Author travis-wei
  * @Version v1.0
- * @Data 2023/3/31
+ * @Data 2023/4/2
  */
 @EnableDiscoveryClient
 @SpringBootApplication
-public class AuthApplication {
+public class DocumentApplication {
     public static void main(String[] args) {
-        SpringApplication.run(AuthApplication.class, args);
+        SpringApplication.run(DocumentApplication.class, args);
     }
 }

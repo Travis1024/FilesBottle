@@ -1,0 +1,43 @@
+# -------------------------------- dev-环境 -----------------------------------
+# 设置当前模块服务名称
+spring:
+  application:
+    name: document-server
+
+# 设置启动端口号
+server:
+  port: 48082
+  servlet:
+    context-path: /fbapi/document
+
+--- # nacos注册中心配置
+spring:
+  cloud:
+    nacos:
+      discovery:
+        namespace: dev
+        server-addr: 140.246.171.8:8848
+        group: document
+        username: nacos
+        password: nacos
+
+--- # nacos配置中心配置
+spring:
+  cloud:
+    nacos:
+      config:
+        namespace: dev
+        server-addr: 140.246.171.8:8848
+        group: document
+        refresh-enabled: true
+        # 获取配置文件的格式：yaml
+        file-extension: yaml
+        username: nacos
+        password: nacos
+
+
+# 设置日志文件名称、日志配置文件路径
+logging:
+  config: classpath:logback-dev.xml
+  file:
+    name: ${user.home}/FilesBottleDev_Logs/${spring.application.name}.log

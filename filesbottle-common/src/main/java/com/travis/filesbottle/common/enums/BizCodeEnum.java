@@ -19,7 +19,7 @@ public enum BizCodeEnum {
      *
      * 一共5位，共分为两段
      *
-     * 第一段：（2位）10-99（业务模块分类）
+     * 第一段：（2位）10-99（业务模块分类）---- moudleCode
      * 10：未知模块（默认）
      * 11：网关模块（gateway）
      * 12：用户模块（member）
@@ -30,7 +30,7 @@ public enum BizCodeEnum {
      * 17：权限认证模块（auth）
      * 18：文档模块（document）
      *
-     * 第二段：（3位）000-999（业务处理状态分类）
+     * 第二段：（3位）000-999（业务处理状态分类）---- bizCode
      *
      */
     /**
@@ -89,13 +89,13 @@ public enum BizCodeEnum {
      * @Description 业务错误状态码构建（规则一）
      * @Author travis-wei
      * @Data 2023/4/1
-     * @param prefixCode	错误模块
-     * @param bizCode	错误类型
+     * @param moudleCode	错误模块码 eg:10
+     * @param bizCode	错误类型码 eg:404
      * @Return javafx.util.Pair<java.lang.Integer,java.lang.String>
      **/
-    public static Pair<Integer, String> buildErrorCode(BizCodeEnum prefixCode, BizCodeEnum bizCode) {
-        int code = prefixCode.getCode() * 1000 + bizCode.getCode();
-        return new Pair<>(code, prefixCode.getMessage() + bizCode.getMessage());
+    public static Pair<Integer, String> buildErrorCode(BizCodeEnum moudleCode, BizCodeEnum bizCode) {
+        int code = moudleCode.getCode() * 1000 + bizCode.getCode();
+        return new Pair<>(code, moudleCode.getMessage() + bizCode.getMessage());
     }
 
 
@@ -104,7 +104,7 @@ public enum BizCodeEnum {
      * @Description 业务错误状态码构建（规则二）
      * @Author travis-wei
      * @Data 2023/4/1
-     * @param bizCode   错误类型
+     * @param bizCode   错误类型 eg:404
      * @Return javafx.util.Pair<java.lang.Integer,java.lang.String>
      **/
     public static Pair<Integer, String> buildErrorCode(BizCodeEnum bizCode) {
@@ -117,12 +117,12 @@ public enum BizCodeEnum {
      * @Description 业务成功状态码构建（规则一）
      * @Author travis-wei
      * @Data 2023/4/1
-     * @param BizCodeEnum 成功模块码
+     * @param moudleCode 成功模块码 eg:11 (网关模块)
      * @Return javafx.util.Pair<java.lang.Integer,java.lang.String>
      **/
-    public static Pair<Integer, String> buildSuccessCode(BizCodeEnum BizCodeEnum) {
-        int code = BizCodeEnum.NO_ERROR.getCode() * 100000 + BizCodeEnum.getCode() * 1000 + BizCodeEnum.SUCCESS.getCode();
-        return new Pair<>(code, BizCodeEnum.SUCCESS.getMessage());
+    public static Pair<Integer, String> buildSuccessCode(BizCodeEnum moudleCode) {
+        int code = moudleCode.getCode() * 1000 + BizCodeEnum.SUCCESS.getCode();
+        return new Pair<>(code, moudleCode.getMessage() + BizCodeEnum.SUCCESS.getMessage());
     }
 
     /**
@@ -134,8 +134,8 @@ public enum BizCodeEnum {
      * @Return javafx.util.Pair<java.lang.Integer,java.lang.String>
      **/
     public static Pair<Integer, String> buildSuccessCode() {
-        int code = BizCodeEnum.NO_ERROR.getCode() * 100000 + BizCodeEnum.MOUDLE_DEFAULT.getCode() * 1000 + BizCodeEnum.SUCCESS.getCode();
-        return new Pair<>(code, BizCodeEnum.SUCCESS.getMessage());
+        int code = BizCodeEnum.MOUDLE_UNKNOW.getCode() * 1000 + BizCodeEnum.SUCCESS.getCode();
+        return new Pair<>(code, BizCodeEnum.MOUDLE_UNKNOW.getMessage() + BizCodeEnum.SUCCESS.getMessage());
     }
 
 }
