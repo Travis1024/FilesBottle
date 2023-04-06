@@ -21,6 +21,7 @@
         <module>filesbottle-wxm</module>
         <module>filesbottle-document</module>
         <module>filesbottle-auth</module>
+        <module>filesbottle-knife4j</module>
     </modules>
 
 
@@ -31,37 +32,60 @@
         <revision>1.0.0-SNAPSHOT</revision>
 
         <!-- 统一依赖管理 -->
-        <spring.boot.version>2.7.8</spring.boot.version>
+        <spring.boot.version>2.6.13</spring.boot.version>
         <spring.cloud.version>2021.0.5</spring.cloud.version>
         <spring.cloud.bootstrap.version>3.1.6</spring.cloud.bootstrap.version>
-        <spring.cloud.alibaba.version>2021.0.4.0</spring.cloud.alibaba.version>
+        <spring.cloud.loadbalancer.version>3.1.6</spring.cloud.loadbalancer.version>
+        <spring.cloud.openfeign.version>3.1.6</spring.cloud.openfeign.version>
+        <spring.cloud.alibaba.version>2021.0.5.0</spring.cloud.alibaba.version>
+        <spring.boot.dubbo.version>3.1.8</spring.boot.dubbo.version>
         <!-- 工具类相关依赖管理 -->
         <lombok.version>1.18.24</lombok.version>
         <jackson.version>2.14.2</jackson.version>
-
+        <hutool.version>5.8.16</hutool.version>
+        <spring.data.redis.version>2.6.13</spring.data.redis.version>
+        <jedis.version>3.9.0</jedis.version>
+        <commons.pool2.version>2.11.1</commons.pool2.version>
+        <mybatis.plus.version>3.3.1</mybatis.plus.version>
+        <spring.jdbc.version>5.3.24</spring.jdbc.version>
         <spring.cloud.gateway.version>3.0.7</spring.cloud.gateway.version>
-
+        <jjwt.version>0.11.5</jjwt.version>
         <knife4j.version>4.1.0</knife4j.version>
+        <knife4j.micro.version>2.0.8</knife4j.micro.version>
+        <druid.version>1.2.16</druid.version>
+        <snakeyaml.version>1.33</snakeyaml.version>
+        <mysql.version>8.0.31</mysql.version>
+        <swagger.annotations.version>1.5.22</swagger.annotations.version>
+        <reactor.core.version>3.4.25</reactor.core.version>
+
     </properties>
 
 
     <dependencyManagement>
         <dependencies>
-            <!-- 统一依赖管理 -->
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-dependencies</artifactId>
-                <version>${spring.boot.version}</version>
-            </dependency>
+
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-dependencies</artifactId>
                 <version>${spring.cloud.version}</version>
             </dependency>
+
             <dependency>
-                <groupId>com.alibaba.cloud</groupId>
-                <artifactId>spring-cloud-alibaba-dependencies</artifactId>
-                <version>${spring.cloud.alibaba.version}</version>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-starter-loadbalancer</artifactId>
+                <version>${spring.cloud.loadbalancer.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-starter-openfeign</artifactId>
+                <version>${spring.cloud.openfeign.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter</artifactId>
+                <version>${spring.boot.version}</version>
             </dependency>
 
             <dependency>
@@ -80,10 +104,17 @@
                 <artifactId>spring-cloud-starter-gateway</artifactId>
                 <version>${spring.cloud.gateway.version}</version>
             </dependency>
+
             <dependency>
                 <groupId>com.github.xiaoymin</groupId>
                 <artifactId>knife4j-aggregation-spring-boot-starter</artifactId>
                 <version>${knife4j.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.github.xiaoymin</groupId>
+                <artifactId>knife4j-micro-spring-boot-starter</artifactId>
+                <version>${knife4j.micro.version}</version>
             </dependency>
 
             <dependency>
@@ -96,6 +127,46 @@
                 <groupId>com.alibaba.cloud</groupId>
                 <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
                 <version>${spring.cloud.alibaba.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-api</artifactId>
+                <version>${jjwt.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-impl</artifactId>
+                <version>${jjwt.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-jackson</artifactId>
+                <version>${jjwt.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-data-redis</artifactId>
+                <version>${spring.data.redis.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-starter</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>io.lettuce</groupId>
+                        <artifactId>lettuce-core</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>redis.clients</groupId>
+                <artifactId>jedis</artifactId>
+                <version>${jedis.version}</version>
             </dependency>
 
             <!-- jackson序列化工具依赖 -->
@@ -114,6 +185,83 @@
                 <artifactId>jackson-databind</artifactId>
                 <version>${jackson.version}</version>
             </dependency>
+
+            <dependency>
+                <groupId>org.yaml</groupId>
+                <artifactId>snakeyaml</artifactId>
+                <version>${snakeyaml.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>cn.hutool</groupId>
+                <artifactId>hutool-all</artifactId>
+                <version>${hutool.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>mybatis-plus-boot-starter</artifactId>
+                <version>${mybatis.plus.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-autoconfigure</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.springframework</groupId>
+                        <artifactId>spring-jdbc</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-jdbc</artifactId>
+                <version>${spring.jdbc.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.alibaba</groupId>
+                <artifactId>druid-spring-boot-starter</artifactId>
+                <version>${druid.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-autoconfigure</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>mysql</groupId>
+                <artifactId>mysql-connector-java</artifactId>
+                <version>${mysql.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.dubbo</groupId>
+                <artifactId>dubbo-spring-boot-starter</artifactId>
+                <version>${spring.boot.dubbo.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.dubbo</groupId>
+                <artifactId>dubbo-registry-nacos</artifactId>
+                <version>${spring.boot.dubbo.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.swagger</groupId>
+                <artifactId>swagger-annotations</artifactId>
+                <version>${swagger.annotations.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.projectreactor</groupId>
+                <artifactId>reactor-core</artifactId>
+                <version>${reactor.core.version}</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.travis.filesbottle.member.mapper.UserMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.travis.filesbottle.member.entity.User">
+        <id column="user_zzid" property="userZzid" />
+        <id column="user_id" property="userId" />
+        <result column="user_name" property="userName" />
+        <result column="user_password" property="userPassword" />
+        <result column="user_role" property="userRole" />
+        <result column="user_team" property="userTeam" />
+        <result column="user_team_role" property="userTeamRole" />
+        <result column="user_enable" property="userEnable" />
+        <result column="user_banning" property="userBanning" />
+        <result column="user_gender" property="userGender" />
+        <result column="user_create_time" property="userCreateTime" />
+        <result column="user_login_time" property="userLoginTime" />
+        <result column="user_pic_url" property="userPicUrl" />
+        <result column="user_phone" property="userPhone" />
+        <result column="user_email" property="userEmail" />
+        <result column="user_phone_hide" property="userPhoneHide" />
+        <result column="user_email_hide" property="userEmailHide" />
+        <result column="user_doc_public_number" property="userDocPublicNumber" />
+        <result column="user_doc_private_number" property="userDocPrivateNumber" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        user_zzid, user_id, user_name, user_password, user_role, user_team, user_team_role, user_enable, user_banning, user_gender, user_create_time, user_login_time, user_pic_url, user_phone, user_email, user_phone_hide, user_email_hide, user_doc_public_number, user_doc_private_number
+    </sql>
+
+</mapper>

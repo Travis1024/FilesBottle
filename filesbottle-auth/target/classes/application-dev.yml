@@ -10,16 +10,55 @@ spring:
 server:
   port: 48081
   servlet:
-    context-path: /fbapi/auth
+    context-path: /api/auth
+
+
+--- # 配置spring-data-redis
+spring:
+  redis:
+    host: 140.246.171.8
+    port: 3796
+    password: w1270278575
+    database: 0
+    jedis:
+      pool:
+        enabled: true
+        max-active: 32
+        max-idle: 16
+        min-idle: 4
+
+
+# 配置dubbo信息
+dubbo:
+  application:
+    name: dubbo-${spring.application.name}
+  protocol:
+    port: -1
+    name: dubbo
+  registry:
+    address: nacos://140.246.171.8:8848?username=nacos&password=nacos
+    parameters.namespace: 64e29a8b-edd7-4f60-b941-24111fb1081c
+    parameters.register-consumer-url: true
+
+
+# 定义有关jwt的配置
+filesbottle:
+  jwt:
+    enabled: true   # 是否开启JWT登录认证功能
+    secret: filesbottle  # JWT 私钥，用于校验JWT令牌的合法性
+    expiration: 3600000 # JWT 令牌的有效期，用于校验JWT令牌的合法性，一个小时
+    header: Authorization # HTTP 请求的 Header 名称，该 Header作为参数传递 JWT 令牌
+    userParamName: userId  # 用户登录认证用户名参数名称
+    pwdParamName: password  # 用户登录认证密码参数名称
+    oneRefreshToken: true # 是否为一次性的刷新令牌
+    multipleRefreshToken: 2 # 刷新令牌有效期为单位有效期的倍数（2，表示为2 * expiration）
+    skipValidUrl: /knife4j, /api/login
+
 
 
 # 设置日志文件名称、日志配置文件路径
 logging:
   config: classpath:logback-dev.xml
-
 logback:
   file:
     path: ${user.home}/FilesBottleDev_Logs/${spring.application.name}
-
-
-

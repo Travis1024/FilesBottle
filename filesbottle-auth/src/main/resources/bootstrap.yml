@@ -3,9 +3,9 @@ spring:
   cloud:
     nacos:
       discovery:
-        namespace: dev
+        namespace: 64e29a8b-edd7-4f60-b941-24111fb1081c
         server-addr: 140.246.171.8:8848
-        group: auth
+#        group: auth
         username: nacos
         password: nacos
 
@@ -14,9 +14,9 @@ spring:
   cloud:
     nacos:
       config:
-        namespace: dev
+        namespace: 64e29a8b-edd7-4f60-b941-24111fb1081c
         server-addr: 140.246.171.8:8848
-        group: auth
+#        group: auth
         refresh-enabled: true
         # 获取配置文件的格式：yaml
         file-extension: yaml

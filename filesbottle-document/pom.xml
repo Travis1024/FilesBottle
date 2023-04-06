@@ -26,7 +26,6 @@
             <groupId>com.travis.filesbottle</groupId>
             <artifactId>filesbottle-common</artifactId>
             <version>${revision}</version>
-            <scope>compile</scope>
         </dependency>
 
         <dependency>
@@ -37,6 +36,17 @@
             <groupId>com.alibaba.cloud</groupId>
             <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-bootstrap</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.xiaoymin</groupId>
+            <artifactId>knife4j-micro-spring-boot-starter</artifactId>
+        </dependency>
+
     </dependencies>
 
 </project>

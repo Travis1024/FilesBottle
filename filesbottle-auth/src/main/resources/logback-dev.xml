@@ -86,8 +86,6 @@
     </appender>
 
 
-
-
     <!-- INFO级别日志 appender -->
     <appender name="INFO"
               class="ch.qos.logback.core.rolling.RollingFileAppender">

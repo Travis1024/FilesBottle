@@ -10,6 +10,7 @@
         <module name="filesbottle-search" />
         <module name="filesbottle-gateway" />
         <module name="filesbottle-system" />
+        <module name="filesbottle-knife4j" />
         <module name="filesbottle-auth" />
         <module name="filesbottle-common" />
         <module name="filesbottle-member" />
