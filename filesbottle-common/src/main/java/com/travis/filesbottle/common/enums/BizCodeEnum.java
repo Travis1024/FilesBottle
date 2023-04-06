@@ -73,6 +73,9 @@ public enum BizCodeEnum {
     /**
      * 自定义服务错误
      */
+    TOKEN_CHECK_FAILED(901, "token 验证失败"),
+    TOKEN_EXPIRED(902, "token 已过期"),
+    TOKEN_MISSION(903, "token 缺失"),
     UNKNOW(999, "未知错误");
 
 

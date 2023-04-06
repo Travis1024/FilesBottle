@@ -18,5 +18,5 @@ public interface DubboUserInfoService {
      * @param userId
      * @Return com.travis.filesbottle.common.dubboservice.member.bo.DubboMemberUser
      **/
-    public DubboMemberUser getUserBasicInfo(String userId);
+    DubboMemberUser getUserBasicInfo(String userId);
 }

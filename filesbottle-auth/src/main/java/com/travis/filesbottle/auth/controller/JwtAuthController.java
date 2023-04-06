@@ -2,9 +2,9 @@ package com.travis.filesbottle.auth.controller;
 
 import cn.hutool.core.util.StrUtil;
 import com.travis.filesbottle.auth.config.JwtPropertiesConfiguration;
-import com.travis.filesbottle.auth.constants.JwtConstants;
-import com.travis.filesbottle.auth.constants.TokenConstants;
-import com.travis.filesbottle.auth.jwtUtils.JwtTokenUtil;
+import com.travis.filesbottle.auth.utils.JwtTokenUtil;
+import com.travis.filesbottle.common.constant.JwtConstants;
+import com.travis.filesbottle.common.constant.TokenConstants;
 import com.travis.filesbottle.common.dubboservice.member.DubboUserInfoService;
 import com.travis.filesbottle.common.dubboservice.member.bo.DubboMemberUser;
 import com.travis.filesbottle.common.enums.BizCodeEnum;
@@ -35,8 +35,6 @@ public class JwtAuthController {
     @Autowired
     private JwtPropertiesConfiguration jwtProperties;
     @Autowired
-    private JwtTokenUtil jwtTokenUtil;
-    @Autowired
     private PasswordEncoder passwordEncoder;
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
@@ -51,21 +49,18 @@ public class JwtAuthController {
         return R.success(userBasicInfo);
     }
 
-
     /**
      * @MethodName login
      * @Description 使用用户名密码换 JWT 令牌
      * @Author travis-wei
-     * @Data 2023/4/3
-     * @param map
+     * @Data 2023/4/6
+     * @param userId
+     * @param password
      * @Return com.travis.filesbottle.common.utils.R<?>
      **/
     @ApiOperation(value = "单点登录-登录接口")
     @PostMapping("/login")
-    public R<?> login(@RequestBody Map<String,String> map){
-        // 从请求体中获取用户名密码
-        String userId  = map.get(jwtProperties.getUserParamName());
-        String password = map.get(jwtProperties.getPwdParamName());
+    public R<?> login(@RequestParam("userid") String userId, @RequestParam("password") String password){
 
         // 如果用户名和密码为空
         if(StrUtil.isEmpty(userId) || StrUtil.isEmpty(password)){
@@ -73,15 +68,14 @@ public class JwtAuthController {
         }
 
         // 根据 userId 去数据库查找该用户  (远程调用)
-        DubboMemberUser userBasicInfo = null;
-//        DubboMemberUser userBasicInfo = dubboUserInfoService.getUserBasicInfo(userId);
+        DubboMemberUser userBasicInfo = dubboUserInfoService.getUserBasicInfo(userId);
         if(userBasicInfo != null){
             // 将数据库的加密密码与用户明文密码做比对
             boolean isAuthenticated = passwordEncoder.matches(password, userBasicInfo.getUserPassword());
             // 如果密码匹配成功
             if(isAuthenticated){
-                // 通过 jwtTokenUtil 生成 JWT 令牌和刷新令牌
-                Map<String, Object> tokenMap = jwtTokenUtil.generateTokenAndRefreshToken(userId, userBasicInfo.getUserName());
+                // 通过 JwtTokenUtil 生成 JWT 令牌和刷新令牌
+                Map<String, Object> tokenMap = JwtTokenUtil.generateTokenAndRefreshToken(userId, userBasicInfo.getUserName());
                 return R.success(tokenMap);
             }
             // 如果密码匹配失败
@@ -115,8 +109,8 @@ public class JwtAuthController {
         }
 
         // 验证 token 里面的 userId 是否为空
-        String userId = jwtTokenUtil.getUserIdFromToken(token);
-        String username = jwtTokenUtil.getUserNameFromToken(token);
+        String userId = JwtTokenUtil.getUserIdFromToken(token);
+        String username = JwtTokenUtil.getUserNameFromToken(token);
         if (StrUtil.isEmpty(userId)) {
             return Mono.create(callback -> callback.success(
                     R.error(BizCodeEnum.MOUDLE_AUTH, BizCodeEnum.BAD_REQUEST, "token验证失败!")
@@ -124,10 +118,10 @@ public class JwtAuthController {
         }
 
         // 对Token解签名，并验证Token是否过期
-        boolean isJwtNotValid = jwtTokenUtil.isTokenExpired(token);
+        boolean isJwtNotValid = JwtTokenUtil.isTokenExpired(token);
         if(isJwtNotValid){
             // token过期，判断redis中是否还有token,如果有的话证明符合刷新条件
-            if (!jwtTokenUtil.isTokenExistInCache(token)) {
+            if (!JwtTokenUtil.isTokenExistInCache(token)) {
                 return Mono.create(callback -> callback.success(
                         R.error(BizCodeEnum.MOUDLE_AUTH, BizCodeEnum.BAD_REQUEST, "刷新失败!已超过刷新期限!")
                 ));
@@ -147,14 +141,14 @@ public class JwtAuthController {
         // 到这一步表明：token未过期 或者 在refreshToken时间范围内
         // 一次性令牌策略的处理逻辑
         if (jwtProperties.getOneRefreshToken()) {
-            Map<String, Object> tokenMap = jwtTokenUtil.onceRefreshToken(token);
+            Map<String, Object> tokenMap = JwtTokenUtil.onceRefreshToken(token);
             return Mono.create(callback -> callback.success(
                     R.success("令牌刷新成功，注意一次性刷新策略！", tokenMap)
             ));
         }
         // 永久性令牌策略的处理逻辑
-        jwtTokenUtil.cacheDeleteToken(userId);
-        Map<String, Object> newTokenMap = jwtTokenUtil.generateTokenAndRefreshToken(userId, username);
+        JwtTokenUtil.cacheDeleteToken(userId);
+        Map<String, Object> newTokenMap = JwtTokenUtil.generateTokenAndRefreshToken(userId, username);
         return Mono.create(callback -> callback.success(
                 R.success("令牌刷新成功！", newTokenMap)
         ));
@@ -170,7 +164,7 @@ public class JwtAuthController {
     @PostMapping("/logout")
     public Mono<R<?>> logout(@RequestParam("userid") String userid){
 
-        boolean logoutResult = jwtTokenUtil.cacheDeleteToken(userid);
+        boolean logoutResult = JwtTokenUtil.cacheDeleteToken(userid);
         if (!logoutResult) {
             return Mono.create(callback -> callback.success(
                     R.error(BizCodeEnum.MOUDLE_AUTH, BizCodeEnum.BAD_REQUEST, "用户退出失败!")

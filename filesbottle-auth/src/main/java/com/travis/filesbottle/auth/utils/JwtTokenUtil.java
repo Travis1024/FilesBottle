@@ -1,8 +1,8 @@
-package com.travis.filesbottle.auth.jwtUtils;
+package com.travis.filesbottle.auth.utils;
 
 import com.travis.filesbottle.auth.config.JwtPropertiesConfiguration;
-import com.travis.filesbottle.auth.constants.JwtConstants;
-import com.travis.filesbottle.auth.constants.TokenConstants;
+import com.travis.filesbottle.common.constant.JwtConstants;
+import com.travis.filesbottle.common.constant.TokenConstants;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -26,12 +26,14 @@ import java.util.concurrent.TimeUnit;
 @Component
 public class JwtTokenUtil {
 
-    @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
+    private static RedisTemplate<String, Object> redisTemplate;
+    private static JwtPropertiesConfiguration jwtProperties;
 
     @Autowired
-    private JwtPropertiesConfiguration jwtProperties;
-
+    public JwtTokenUtil(RedisTemplate<String, Object> redisTemplate, JwtPropertiesConfiguration jwtProperties) {
+        JwtTokenUtil.redisTemplate = redisTemplate;
+        JwtTokenUtil.jwtProperties = jwtProperties;
+    }
 
     /**
      * @MethodName generateTokenAndRefreshToken
@@ -42,7 +44,7 @@ public class JwtTokenUtil {
      * @param username
      * @Return java.util.Map<java.lang.String,java.lang.Object>
      **/
-    public Map<String, Object> generateTokenAndRefreshToken(String userId, String username) {
+    public static Map<String, Object> generateTokenAndRefreshToken(String userId, String username) {
 
         // 生成令牌Token
         String accessToken = generateToken(userId, username, null);
@@ -68,7 +70,7 @@ public class JwtTokenUtil {
      * @param token
      * @Return java.util.Map<java.lang.String,java.lang.Object>
      **/
-    public Map<String, Object> onceRefreshToken(String token) {
+    public static Map<String, Object> onceRefreshToken(String token) {
         Claims claimsFromToken = getClaimsFromToken(token);
         String userId = getUserIdFromToken(token);
         String newToken = generateToken(claimsFromToken);
@@ -97,10 +99,10 @@ public class JwtTokenUtil {
      * @param tokenMap
      * @Return void
      **/
-    private void cacheAddToken(String userId, Map<String, Object> tokenMap) {
+    private static void cacheAddToken(String userId, Map<String, Object> tokenMap) {
         redisTemplate.opsForHash().put(JwtConstants.JWT_CACHE_KEY + userId, JwtConstants.ACCESS_TOKEN, tokenMap.get(JwtConstants.ACCESS_TOKEN));
         redisTemplate.opsForHash().put(JwtConstants.JWT_CACHE_KEY + userId, JwtConstants.REFRESH_TOKEN, tokenMap.get(JwtConstants.REFRESH_TOKEN));
-        redisTemplate.expire(userId, jwtProperties.getExpiration() * jwtProperties.getMultipleRefreshToken(), TimeUnit.MILLISECONDS);
+        redisTemplate.expire(JwtConstants.JWT_CACHE_KEY + userId, jwtProperties.getExpiration() * jwtProperties.getMultipleRefreshToken(), TimeUnit.MILLISECONDS);
     }
 
     /**
@@ -111,7 +113,7 @@ public class JwtTokenUtil {
      * @param userId
      * @Return boolean
      **/
-    public boolean cacheDeleteToken(String userId) {
+    public static boolean cacheDeleteToken(String userId) {
         return Boolean.TRUE.equals(redisTemplate.delete(JwtConstants.JWT_CACHE_KEY + userId));
     }
 
@@ -125,7 +127,7 @@ public class JwtTokenUtil {
      * @param payloads	负载
      * @Return java.lang.String
      **/
-    public String generateToken(String userId, String username, Map<String,String> payloads) {
+    public static String generateToken(String userId, String username, Map<String,String> payloads) {
         Map<String, Object> claims = buildClaims(userId, username, payloads);
         return generateToken(claims);
     }
@@ -138,7 +140,7 @@ public class JwtTokenUtil {
      * @param claims
      * @Return java.lang.String
      **/
-    private String generateToken(Map<String, Object> claims) {
+    private static String generateToken(Map<String, Object> claims) {
         Date expirationDate = new Date(System.currentTimeMillis() + jwtProperties.getExpiration());
 
         return Jwts.builder()
@@ -158,7 +160,7 @@ public class JwtTokenUtil {
      * @param payloads
      * @Return java.lang.String
      **/
-    public String generateRefreshToken(String userId, String username, Map<String,String> payloads) {
+    public static String generateRefreshToken(String userId, String username, Map<String,String> payloads) {
         Map<String, Object> claims = buildClaims(userId, username, payloads);
         return generateRefreshToken(claims);
     }
@@ -171,7 +173,7 @@ public class JwtTokenUtil {
      * @param claims
      * @Return java.lang.String
      **/
-    private String generateRefreshToken(Map<String, Object> claims) {
+    private static String generateRefreshToken(Map<String, Object> claims) {
         Date expirationDate = new Date(System.currentTimeMillis() + jwtProperties.getExpiration() * jwtProperties.getMultipleRefreshToken());
         return Jwts.builder()
                 .setClaims(claims)
@@ -190,7 +192,7 @@ public class JwtTokenUtil {
      * @param payloads	负载
      * @Return java.util.Map<java.lang.String,java.lang.Object>
      **/
-    private Map<String, Object> buildClaims(String userId, String username, Map<String, String> payloads) {
+    private static Map<String, Object> buildClaims(String userId, String username, Map<String, String> payloads) {
         int payloadSizes = payloads == null? 0 : payloads.size();
 
         Map<String, Object> claims = new HashMap<>();
@@ -212,7 +214,7 @@ public class JwtTokenUtil {
      * @param request
      * @Return java.lang.String
      **/
-    public String getUserIdFromRequest(HttpServletRequest request) {
+    public static String getUserIdFromRequest(HttpServletRequest request) {
         return request.getHeader(JwtConstants.USER_ID);
     }
 
@@ -224,7 +226,7 @@ public class JwtTokenUtil {
      * @param token
      * @Return java.lang.String
      **/
-    public String getUserIdFromToken(String token) {
+    public static String getUserIdFromToken(String token) {
         String userId;
         try {
             Claims claims = getClaimsFromToken(token);
@@ -244,7 +246,7 @@ public class JwtTokenUtil {
      * @param token
      * @Return java.lang.String
      **/
-    public String getUserNameFromToken(String token) {
+    public static String getUserNameFromToken(String token) {
         String username;
         try {
             Claims claims = getClaimsFromToken(token);
@@ -263,7 +265,7 @@ public class JwtTokenUtil {
      * @param token
      * @Return io.jsonwebtoken.Claims
      **/
-    private Claims getClaimsFromToken(String token) {
+    private static Claims getClaimsFromToken(String token) {
         Claims claims;
         try {
             claims = Jwts.parser().setSigningKey(jwtProperties.getSecret()).parseClaimsJws(token).getBody();
@@ -281,7 +283,7 @@ public class JwtTokenUtil {
      * @param token
      * @Return java.lang.String
      **/
-    private String getRefreshTokenByToken(String token) {
+    private static String getRefreshTokenByToken(String token) {
         String userId = getUserIdFromToken(token);
         return (String)redisTemplate.opsForHash().get(JwtConstants.JWT_CACHE_KEY + userId, JwtConstants.REFRESH_TOKEN);
     }
@@ -294,7 +296,7 @@ public class JwtTokenUtil {
      * @param token
      * @Return java.lang.Boolean｜true：存在；false：不存在
      **/
-    public Boolean isTokenExistInCache(String token) {
+    public static Boolean isTokenExistInCache(String token) {
         String userId = getUserIdFromToken(token);
         String cacheToken = (String)redisTemplate.opsForHash().get(JwtConstants.JWT_CACHE_KEY + userId, JwtConstants.ACCESS_TOKEN);
         return cacheToken != null && cacheToken.equals(token);
@@ -308,7 +310,7 @@ public class JwtTokenUtil {
      * @param token
      * @Return java.lang.Boolean ｜ true：过期；false：未过期；
      **/
-    public Boolean isTokenExpired(String token) {
+    public static Boolean isTokenExpired(String token) {
         try {
             Claims claims = getClaimsFromToken(token);
             Date expiration = claims.getExpiration();
@@ -328,7 +330,7 @@ public class JwtTokenUtil {
      * @param token
      * @Return java.lang.Boolean
      **/
-    public Boolean isTokenCouldRefresh(String token) {
+    public static Boolean isTokenCouldRefresh(String token) {
         // 如果令牌在redis中存在
         if (isTokenExistInCache(token)) {
             if (!jwtProperties.getOneRefreshToken()) {

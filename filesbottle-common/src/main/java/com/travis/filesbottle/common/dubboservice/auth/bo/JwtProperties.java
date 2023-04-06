@@ -1,20 +1,18 @@
-package com.travis.filesbottle.auth.config;
+package com.travis.filesbottle.common.dubboservice.auth.bo;
 
 import lombok.Data;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
+
+import java.io.Serializable;
 
 /**
  * @ClassName JwtProperties
  * @Description TODO
  * @Author travis-wei
  * @Version v1.0
- * @Data 2023/4/3
+ * @Data 2023/4/6
  */
 @Data
-@Component
-@ConfigurationProperties("filesbottle.jwt")
-public class JwtPropertiesConfiguration {
+public class JwtProperties implements Serializable {
     /**
      * 是否开启JWT，即注入相关的类对象
      */

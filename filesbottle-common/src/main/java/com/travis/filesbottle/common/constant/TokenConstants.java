@@ -1,4 +1,4 @@
-package com.travis.filesbottle.auth.constants;
+package com.travis.filesbottle.common.constant;
 
 /**
  * @ClassName TokenConstants
