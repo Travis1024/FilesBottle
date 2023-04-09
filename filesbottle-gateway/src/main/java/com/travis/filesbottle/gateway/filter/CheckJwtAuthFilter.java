@@ -4,10 +4,10 @@ import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.travis.filesbottle.common.constant.TokenConstants;
-import com.travis.filesbottle.common.dubboservice.auth.DubboJwtPropertiesService;
-import com.travis.filesbottle.common.dubboservice.auth.DubboJwtUtilsService;
-import com.travis.filesbottle.common.dubboservice.auth.bo.JwtProperties;
+import com.travis.filesbottle.common.dubboservice.auth.DubboCheckJwtAuthService;
+import com.travis.filesbottle.common.dubboservice.auth.bo.DubboAuthUser;
 import com.travis.filesbottle.common.enums.BizCodeEnum;
+import com.travis.filesbottle.common.utils.BizCodeUtil;
 import com.travis.filesbottle.common.utils.R;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.config.annotation.DubboReference;
@@ -46,13 +46,8 @@ public class CheckJwtAuthFilter implements GlobalFilter, Ordered {
     public static final String USER_NAME = "username";
     public static final String FROM_SOURCE = "from-source";
 
-    private JwtProperties jwtProperties = null;
-
     @DubboReference
-    private DubboJwtPropertiesService dubboJwtPropertiesService;
-    @DubboReference
-    private DubboJwtUtilsService dubboJwtUtilsService;
-
+    private DubboCheckJwtAuthService dubboCheckJwtAuthService;
 
 
     @Override
@@ -61,7 +56,8 @@ public class CheckJwtAuthFilter implements GlobalFilter, Ordered {
         ServerHttpResponse serverHttpResponse = exchange.getResponse();
 
         /**
-         * 通过此方法修改ServerHttpRequest的属性信息
+         * 通过此方法修改ServerHttpRequest的属性信息。
+         * mutate():返回一个构建器来改变这个请求的属性
          */
         ServerHttpRequest.Builder mutate = serverHttpRequest.mutate();
         String requestUrl = serverHttpRequest.getURI().getPath();
@@ -71,28 +67,31 @@ public class CheckJwtAuthFilter implements GlobalFilter, Ordered {
             if (requestUrl.startsWith(path)) return chain.filter(exchange);
         }
 
-        // 通过Dubbo远程获取jwtproperties配置信息
-        jwtProperties = dubboJwtPropertiesService.getJwtProperties();
-
-        // 从 HTTP 请求头中获取 JWT 令牌
+        // 从HTTP请求头中获取JWT令牌
         String token = getToken(serverHttpRequest);
+        // 判断token令牌是否为空
         if (StrUtil.isEmpty(token)) {
             return unauthorizedResponse(exchange, serverHttpResponse, BizCodeEnum.TOKEN_MISSION);
         }
 
-        // 对Token解签名，并验证Token是否过期
-        boolean isJwtNotValid = dubboJwtUtilsService.isTokenExpired(token);
-        if(isJwtNotValid){
-            return unauthorizedResponse(exchange, serverHttpResponse, BizCodeEnum.TOKEN_EXPIRED);
-        }
+        // 通过Dubbo远程对获取的token进行鉴权
+        R<DubboAuthUser> jwtAuthResult = dubboCheckJwtAuthService.checkJwtAuth(token);
 
-        // 验证 token 里面的 userId 是否为空
-        String userId = dubboJwtUtilsService.getUserIdFromToken(token);
-        String username = dubboJwtUtilsService.getUserNameFromToken(token);
-        if (StrUtil.isEmpty(userId)) {
-            return unauthorizedResponse(exchange, serverHttpResponse, BizCodeEnum.TOKEN_CHECK_FAILED);
+        // 根据鉴权失败原因返回相应的相应信息
+        if (!BizCodeUtil.isCodeSuccess(jwtAuthResult.getCode())) {
+            if (BizCodeUtil.getThreeCode(jwtAuthResult.getCode()).equals(BizCodeEnum.TOKEN_CHECK_FAILED.getCode())) {
+                return unauthorizedResponse(exchange, serverHttpResponse, BizCodeEnum.TOKEN_CHECK_FAILED);
+            }else if (BizCodeUtil.getThreeCode(jwtAuthResult.getCode()).equals(BizCodeEnum.TOKEN_EXPIRED.getCode())) {
+                return unauthorizedResponse(exchange, serverHttpResponse, BizCodeEnum.TOKEN_EXPIRED);
+            }else {
+                /**
+                 * 前端需要判断该响应码，更新请求头中的token信息。如果前端没有更新token，之后继续使用旧的token发送请求，则会提示token已过期
+                 */
+                return unauthorizedResponse(exchange, serverHttpResponse, BizCodeEnum.TOKEN_REFRESH);
+            }
         }
-
+        String userId = jwtAuthResult.getData().getUserId();
+        String username = jwtAuthResult.getData().getUserName();
         // 设置用户信息到请求
         addHeader(mutate, USER_ID, userId);
         addHeader(mutate, USER_NAME, username);
@@ -116,11 +115,13 @@ public class CheckJwtAuthFilter implements GlobalFilter, Ordered {
     }
 
     /**
-     * 内容编码
-     *
-     * @param str 内容
-     * @return 编码后的内容
-     */
+     * @MethodName urlEncode
+     * @Description 对内容进行编码
+     * @Author travis-wei
+     * @Data 2023/4/7
+     * @param str
+     * @Return java.lang.String
+     **/
     public static String urlEncode(String str) {
         try {
             return URLEncoder.encode(str, String.valueOf(StandardCharsets.UTF_8));
@@ -131,10 +132,15 @@ public class CheckJwtAuthFilter implements GlobalFilter, Ordered {
     }
 
     /**
-     * 获取请求token
-     */
+     * @MethodName getToken
+     * @Description 从http request请求头中提取token
+     * @Author travis-wei
+     * @Data 2023/4/7
+     * @param request
+     * @Return java.lang.String
+     **/
     private String getToken(ServerHttpRequest request) {
-        String token = request.getHeaders().getFirst(jwtProperties.getHeader());
+        String token = request.getHeaders().getFirst(TokenConstants.AUTHENTICATION);
         // 如果前端设置了令牌前缀，则裁剪掉前缀
         if (StrUtil.isNotEmpty(token) && token.startsWith(TokenConstants.PREFIX)) {
             token = token.replaceFirst(TokenConstants.PREFIX, StrUtil.EMPTY);
@@ -143,15 +149,21 @@ public class CheckJwtAuthFilter implements GlobalFilter, Ordered {
     }
 
     /**
-     * 将 JWT 鉴权失败的消息响应给客户端
-     */
+     * @MethodName unauthorizedResponse
+     * @Description 将 JWT 鉴权失败的消息响应给客户端
+     * @Author travis-wei
+     * @Data 2023/4/7
+     * @param exchange
+     * @param serverHttpResponse
+     * @param bizCodeEnum
+     * @Return reactor.core.publisher.Mono<java.lang.Void>
+     **/
     private Mono<Void> unauthorizedResponse(ServerWebExchange exchange, ServerHttpResponse serverHttpResponse, BizCodeEnum bizCodeEnum) {
         log.error("[鉴权异常处理]请求路径:{}", exchange.getRequest().getPath());
         serverHttpResponse.setStatusCode(HttpStatus.UNAUTHORIZED);
         // 指定编码，否则在浏览器中会出现中文乱码
         serverHttpResponse.getHeaders().add("Content-Type", "application/json;charset=UTF-8");
         R<?> responseResult = R.error(BizCodeEnum.MOUDLE_GATEWAY, bizCodeEnum);
-//        DataBuffer dataBuffer = serverHttpResponse.bufferFactory().wrap(JSON.toJSONStringWithDateFormat(responseResult, JSON.DEFFAULT_DATE_FORMAT).getBytes(StandardCharsets.UTF_8));
         DataBuffer dataBuffer = null;
         try {
             dataBuffer = serverHttpResponse.bufferFactory().wrap(new ObjectMapper().writeValueAsBytes(responseResult));

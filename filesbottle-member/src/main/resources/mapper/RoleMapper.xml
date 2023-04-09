@@ -5,7 +5,7 @@
     <!-- 通用查询映射结果 -->
     <resultMap id="BaseResultMap" type="com.travis.filesbottle.member.entity.Role">
         <id column="role_zzid" property="roleZzid" />
-        <id column="role_id" property="roleId" />
+        <result column="role_id" property="roleId" />
         <result column="role_name" property="roleName" />
     </resultMap>
 

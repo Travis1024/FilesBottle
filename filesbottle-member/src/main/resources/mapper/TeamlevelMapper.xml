@@ -5,7 +5,7 @@
     <!-- 通用查询映射结果 -->
     <resultMap id="BaseResultMap" type="com.travis.filesbottle.member.entity.Teamlevel">
         <id column="teamlevel_zzid" property="teamlevelZzid" />
-        <id column="teamlevel_id" property="teamlevelId" />
+        <result column="teamlevel_id" property="teamlevelId" />
         <result column="teamlevel_name" property="teamlevelName" />
         <result column="teamlevel_max_people_number" property="teamlevelMaxPeopleNumber" />
         <result column="teamlevel_max_storage_space" property="teamlevelMaxStorageSpace" />

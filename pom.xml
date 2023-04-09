@@ -38,7 +38,7 @@
         <spring.cloud.loadbalancer.version>3.1.6</spring.cloud.loadbalancer.version>
         <spring.cloud.openfeign.version>3.1.6</spring.cloud.openfeign.version>
         <spring.cloud.alibaba.version>2021.0.5.0</spring.cloud.alibaba.version>
-        <spring.boot.dubbo.version>3.1.8</spring.boot.dubbo.version>
+        <spring.boot.dubbo.version>3.0.14</spring.boot.dubbo.version>
         <!-- 工具类相关依赖管理 -->
         <lombok.version>1.18.24</lombok.version>
         <jackson.version>2.14.2</jackson.version>
@@ -46,7 +46,7 @@
         <spring.data.redis.version>2.6.13</spring.data.redis.version>
         <jedis.version>3.9.0</jedis.version>
         <commons.pool2.version>2.11.1</commons.pool2.version>
-        <mybatis.plus.version>3.3.1</mybatis.plus.version>
+        <mybatis.plus.version>3.5.1</mybatis.plus.version>
         <spring.jdbc.version>5.3.24</spring.jdbc.version>
         <spring.cloud.gateway.version>3.0.7</spring.cloud.gateway.version>
         <jjwt.version>0.11.5</jjwt.version>
@@ -57,6 +57,7 @@
         <mysql.version>8.0.31</mysql.version>
         <swagger.annotations.version>1.5.22</swagger.annotations.version>
         <reactor.core.version>3.4.25</reactor.core.version>
+        <sentinel.version>1.8.6</sentinel.version>
 
     </properties>
 
@@ -260,6 +261,12 @@
                 <groupId>io.projectreactor</groupId>
                 <artifactId>reactor-core</artifactId>
                 <version>${reactor.core.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.alibaba.cloud</groupId>
+                <artifactId>spring-cloud-starter-alibaba-sentinel</artifactId>
+                <version>${spring.cloud.alibaba.version}</version>
             </dependency>
 
         </dependencies>

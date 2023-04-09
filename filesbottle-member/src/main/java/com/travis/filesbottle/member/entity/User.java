@@ -15,7 +15,7 @@ import lombok.experimental.Accessors;
 
 /**
  * <p>
- * 
+ *
  * </p>
  *
  * @author travis-wei
@@ -35,7 +35,7 @@ public class User extends Model<User> {
     private Long userZzid;
 
     @ApiModelProperty("用户ID")
-    @TableId(value = "user_id", type = IdType.ASSIGN_ID)
+    @TableField("user_id")
     private String userId;
 
     @ApiModelProperty("用户名字")
@@ -146,6 +146,6 @@ public class User extends Model<User> {
 
     @Override
     public Serializable pkVal() {
-        return this.userId;
+        return this.userZzid;
     }
 }

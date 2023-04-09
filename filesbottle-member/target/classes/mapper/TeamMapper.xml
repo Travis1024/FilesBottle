@@ -5,7 +5,7 @@
     <!-- 通用查询映射结果 -->
     <resultMap id="BaseResultMap" type="com.travis.filesbottle.member.entity.Team">
         <id column="team_zzid" property="teamZzid" />
-        <id column="team_id" property="teamId" />
+        <result column="team_id" property="teamId" />
         <result column="team_name" property="teamName" />
         <result column="team_creator" property="teamCreator" />
         <result column="team_create_time" property="teamCreateTime" />

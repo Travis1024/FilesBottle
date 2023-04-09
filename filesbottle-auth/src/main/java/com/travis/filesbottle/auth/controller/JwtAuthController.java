@@ -11,6 +11,7 @@ import com.travis.filesbottle.common.enums.BizCodeEnum;
 import com.travis.filesbottle.common.utils.R;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -27,6 +28,7 @@ import java.util.Map;
  * @Version v1.0
  * @Data 2023/4/3
  */
+@Slf4j
 @Api(tags = "单点登录Controller")
 @RestController
 @RequestMapping("/sso")
@@ -49,6 +51,7 @@ public class JwtAuthController {
         return R.success(userBasicInfo);
     }
 
+
     /**
      * @MethodName login
      * @Description 使用用户名密码换 JWT 令牌
@@ -65,6 +68,15 @@ public class JwtAuthController {
         // 如果用户名和密码为空
         if(StrUtil.isEmpty(userId) || StrUtil.isEmpty(password)){
             return R.error(BizCodeEnum.MOUDLE_AUTH, BizCodeEnum.BAD_REQUEST, "用户名和密码不能为空!");
+        }
+
+        // 首先判断用户是否已经登录
+        if (JwtTokenUtil.isUserExistInCache(userId)) {
+            // 判断该用户的token是否已经过期
+            String cacheToken = JwtTokenUtil.getCacheTokenByUserId(userId);
+            if (!JwtTokenUtil.isTokenExpired(cacheToken)) {
+                return R.error(BizCodeEnum.MOUDLE_AUTH, BizCodeEnum.BAD_REQUEST, "该用户已经登录，请勿重复登录!");
+            }
         }
 
         // 根据 userId 去数据库查找该用户  (远程调用)

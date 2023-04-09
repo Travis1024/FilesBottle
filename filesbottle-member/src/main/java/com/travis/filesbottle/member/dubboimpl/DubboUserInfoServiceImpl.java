@@ -5,6 +5,7 @@ import com.travis.filesbottle.common.dubboservice.member.DubboUserInfoService;
 import com.travis.filesbottle.common.dubboservice.member.bo.DubboMemberUser;
 import com.travis.filesbottle.member.entity.User;
 import com.travis.filesbottle.member.mapper.UserMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.config.annotation.DubboService;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -18,6 +19,7 @@ import java.util.List;
  * @Version v1.0
  * @Data 2023/4/5
  */
+@Slf4j
 @DubboService
 public class DubboUserInfoServiceImpl implements DubboUserInfoService {
 
@@ -34,13 +36,8 @@ public class DubboUserInfoServiceImpl implements DubboUserInfoService {
      **/
     @Override
     public DubboMemberUser getUserBasicInfo(String userId) {
-        HashMap<String, Object> map = new HashMap<>(1);
-        map.put(User.USER_ID, userId);
-        List<User> users = userMapper.selectByMap(map);
+        User user = userMapper.getUserBasicInfo(userId);
 
-        if (users.size() == 0) return null;
-
-        User user = users.get(0);
         DubboMemberUser dubboMemberUser = new DubboMemberUser();
         dubboMemberUser.setUserId(userId);
         dubboMemberUser.setUserPassword(user.getUserPassword());

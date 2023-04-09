@@ -1,9 +1,11 @@
 package com.travis.filesbottle.auth.utils;
 
+import cn.hutool.core.util.StrUtil;
 import com.travis.filesbottle.auth.config.JwtPropertiesConfiguration;
 import com.travis.filesbottle.common.constant.JwtConstants;
 import com.travis.filesbottle.common.constant.TokenConstants;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -84,7 +86,7 @@ public class JwtTokenUtil {
 
         redisTemplate.opsForHash().put(JwtConstants.JWT_CACHE_KEY + userId, JwtConstants.ACCESS_TOKEN, newTokenMap.get(JwtConstants.ACCESS_TOKEN));
         redisTemplate.opsForHash().put(JwtConstants.JWT_CACHE_KEY + userId, JwtConstants.REFRESH_TOKEN, newTokenMap.get(JwtConstants.REFRESH_TOKEN));
-        redisTemplate.expire(userId, jwtProperties.getExpiration(), TimeUnit.MILLISECONDS);
+        redisTemplate.expire(JwtConstants.JWT_CACHE_KEY + userId, jwtProperties.getExpiration(), TimeUnit.MILLISECONDS);
 
         return newTokenMap;
     }
@@ -269,6 +271,8 @@ public class JwtTokenUtil {
         Claims claims;
         try {
             claims = Jwts.parser().setSigningKey(jwtProperties.getSecret()).parseClaimsJws(token).getBody();
+        } catch (ExpiredJwtException e1) {
+            claims = e1.getClaims();
         } catch (Exception e) {
             claims = null;
         }
@@ -300,6 +304,31 @@ public class JwtTokenUtil {
         String userId = getUserIdFromToken(token);
         String cacheToken = (String)redisTemplate.opsForHash().get(JwtConstants.JWT_CACHE_KEY + userId, JwtConstants.ACCESS_TOKEN);
         return cacheToken != null && cacheToken.equals(token);
+    }
+
+    /**
+     * @MethodName isUserExistInCache
+     * @Description 根据用户名，获取redis中的token信息
+     * @Author travis-wei
+     * @Data 2023/4/7
+     * @param userId
+     * @Return java.lang.Boolean
+     **/
+    public static String getCacheTokenByUserId(String userId) {
+        return (String)redisTemplate.opsForHash().get(JwtConstants.JWT_CACHE_KEY + userId, JwtConstants.ACCESS_TOKEN);
+    }
+
+    /**
+     * @MethodName isUserExistInCache
+     * @Description 判断redis中是否存在该用户的token信息
+     * @Author travis-wei
+     * @Data 2023/4/7
+     * @param
+     * @Return java.lang.String
+     **/
+    public static Boolean isUserExistInCache(String userId) {
+        String token = getCacheTokenByUserId(userId);
+        return !StrUtil.isEmpty(token);
     }
 
     /**
@@ -344,5 +373,17 @@ public class JwtTokenUtil {
         }
         // 令牌在redis中不存在
         return false;
+    }
+
+    /**
+     * @MethodName isOnceRefresh
+     * @Description 是否为一次性刷新令牌策略
+     * @Author travis-wei
+     * @Data 2023/4/7
+     * @param
+     * @Return java.lang.Boolean
+     **/
+    public static Boolean isOnceRefresh() {
+        return jwtProperties.getOneRefreshToken();
     }
 }

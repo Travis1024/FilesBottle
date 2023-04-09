@@ -28,6 +28,17 @@ spring:
         min-idle: 4
 
 
+--- # 配置sentinel信息
+spring:
+  cloud:
+    sentinel:
+      enabled: true
+      eager: true
+      transport:
+        dashboard: 127.0.0.1:8858
+        port: 8719
+
+
 # 配置dubbo信息
 dubbo:
   application:
@@ -35,13 +46,17 @@ dubbo:
   protocol:
     port: -1
     name: dubbo
+    threads: 400
+    threadpool: cached
+    dispatcher: message
   registry:
     address: nacos://140.246.171.8:8848?username=nacos&password=nacos
     parameters.namespace: 64e29a8b-edd7-4f60-b941-24111fb1081c
-#    parameters.register-consumer-url: true
+  # parameters.register-consumer-url: true
   # 设置消费者超时时间为3秒
   consumer:
-    timeout: 3000
+    timeout: 10000
+
 
 
 # 定义有关jwt的配置
@@ -50,7 +65,7 @@ filesbottle:
     enabled: true   # 是否开启JWT登录认证功能
     secret: filesbottlefilesbottlefilesbottlefilesbottlefilesbottlefilesbottlefilesbottlefilesbottlefilesbottle  # JWT 私钥，用于校验JWT令牌的合法性
     expiration: 3600000 # JWT 令牌的有效期，用于校验JWT令牌的合法性，一个小时
-    header: Authorization # HTTP 请求的 Header 名称，该 Header作为参数传递 JWT 令牌
+    header: Authorization # (注意：该参数需要与common模块-TokenConstants中的令牌标识对应) HTTP 请求的 Header 名称，该 Header作为参数传递 JWT 令牌
     userParamName: userId  # 用户登录认证用户名参数名称
     pwdParamName: password  # 用户登录认证密码参数名称
     oneRefreshToken: true # 是否为一次性的刷新令牌
@@ -64,3 +79,4 @@ logging:
 logback:
   file:
     path: ${user.home}/FilesBottleDev_Logs/${spring.application.name}
+

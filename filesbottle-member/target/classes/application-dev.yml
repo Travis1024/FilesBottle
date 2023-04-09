@@ -30,9 +30,9 @@ spring:
       username: root
       password: w1270278575
       # 初始化大小，最小，最大
-      initial-size: 10
-      max-active: 100
-      min-idle: 10
+      initial-size: 20
+      max-active: 1000
+      min-idle: 50
       # 配置获取连接等待超时的时间
       max-wait: 60000
       # 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒
@@ -48,6 +48,7 @@ spring:
       connection-properties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=5000
       # 建议配置为true，不影响性能，并且保证安全性。
       test-while-idle: true
+
 
 --- # 配置druid监控（web-stat）
 spring:
@@ -73,8 +74,8 @@ spring:
         login-username: root
         # 监控页面登录的密码
         login-password: w1270278575
-        # 允许的IP
-        # allow:
+        # 允许的IP，如果允许所有访问，需要对allow进行置空
+        allow:
         # 拒绝访问的IP
         # deny:
 
@@ -96,9 +97,14 @@ dubbo:
   protocol:
     port: -1
     name: dubbo
+    threads: 400
+    threadpool: cached
+    dispatcher: message
   registry:
     address: nacos://140.246.171.8:8848?username=nacos&password=nacos
     parameters.namespace: 64e29a8b-edd7-4f60-b941-24111fb1081c
+  provider:
+    timeout: 10000
 #    parameters.register-consumer-url: true
 
 

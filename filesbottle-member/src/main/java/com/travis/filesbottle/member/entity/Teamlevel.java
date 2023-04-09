@@ -14,7 +14,7 @@ import lombok.experimental.Accessors;
 
 /**
  * <p>
- * 
+ *
  * </p>
  *
  * @author travis-wei
@@ -34,7 +34,7 @@ public class Teamlevel extends Model<Teamlevel> {
     private Long teamlevelZzid;
 
     @ApiModelProperty("团队级别ID")
-    @TableId(value = "teamlevel_id", type = IdType.ASSIGN_ID)
+    @TableField("teamlevel_id")
     private Byte teamlevelId;
 
     @ApiModelProperty("团队级别名称")
@@ -61,6 +61,6 @@ public class Teamlevel extends Model<Teamlevel> {
 
     @Override
     public Serializable pkVal() {
-        return this.teamlevelId;
+        return this.teamlevelZzid;
     }
 }

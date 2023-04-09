@@ -34,7 +34,7 @@ public class Role extends Model<Role> {
     private Long roleZzid;
 
     @ApiModelProperty("角色ID")
-    @TableId(value = "role_id", type = IdType.ASSIGN_ID)
+    @TableField("role_id")
     private Byte roleId;
 
     @ApiModelProperty("角色名称")
@@ -49,6 +49,6 @@ public class Role extends Model<Role> {
 
     @Override
     public Serializable pkVal() {
-        return this.roleId;
+        return this.roleZzid;
     }
 }

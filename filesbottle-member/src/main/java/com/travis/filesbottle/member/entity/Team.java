@@ -35,7 +35,7 @@ public class Team extends Model<Team> {
     private Long teamZzid;
 
     @ApiModelProperty("团队ID")
-    @TableId(value = "team_id", type = IdType.ASSIGN_ID)
+    @TableField(value = "team_id")
     private String teamId;
 
     @ApiModelProperty("团队名称")
@@ -98,6 +98,6 @@ public class Team extends Model<Team> {
 
     @Override
     public Serializable pkVal() {
-        return this.teamId;
+        return this.teamZzid;
     }
 }
