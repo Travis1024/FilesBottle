@@ -4,7 +4,7 @@ import com.travis.filesbottle.common.enums.BizCodeEnum;
 
 /**
  * @ClassName BizCodeUtil
- * @Description TODO
+ * @Description Biz状态码工具包
  * @Author travis-wei
  * @Version v1.0
  * @Data 2023/4/7

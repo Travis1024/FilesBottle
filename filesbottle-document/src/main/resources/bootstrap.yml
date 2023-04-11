@@ -9,6 +9,7 @@ spring:
         username: nacos
         password: nacos
 
+
 --- # nacos配置中心配置
 spring:
   cloud:

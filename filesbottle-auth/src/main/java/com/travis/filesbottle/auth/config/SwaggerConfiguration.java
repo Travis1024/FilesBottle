@@ -16,7 +16,7 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2WebMvc;
 
 /**
  * @ClassName SwaggerConfiguration
- * @Description TODO
+ * @Description Swagger 配置类
  * @Author travis-wei
  * @Version v1.0
  * @Data 2023/4/3

@@ -8,7 +8,7 @@ import java.io.Serializable;
 
 /**
  * @ClassName DubboMemberUser
- * @Description TODO
+ * @Description Dubbo-用户基本信息BO
  * @Author travis-wei
  * @Version v1.0
  * @Data 2023/4/5

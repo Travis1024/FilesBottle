@@ -9,7 +9,7 @@ import java.util.Map;
 
 /**
  * @ClassName DubboAuthUser
- * @Description TODO
+ * @Description Dubbo-用户权限BO定义
  * @Author travis-wei
  * @Version v1.0
  * @Data 2023/4/7

@@ -5,7 +5,7 @@ import com.travis.filesbottle.common.utils.R;
 
 /**
  * @ClassName DubboCheckJwtAuthService
- * @Description TODO
+ * @Description Dubbo-用户鉴权服务接口
  * @Author travis-wei
  * @Version v1.0
  * @Data 2023/4/7

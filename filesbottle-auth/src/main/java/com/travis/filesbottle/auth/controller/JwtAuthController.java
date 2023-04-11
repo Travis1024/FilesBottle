@@ -23,7 +23,7 @@ import java.util.Map;
 
 /**
  * @ClassName JwtAuthController
- * @Description TODO
+ * @Description 单点登录鉴权模块
  * @Author travis-wei
  * @Version v1.0
  * @Data 2023/4/3
@@ -40,16 +40,15 @@ public class JwtAuthController {
     private PasswordEncoder passwordEncoder;
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
-
     @DubboReference
     private DubboUserInfoService dubboUserInfoService;
 
-    @ApiOperation(value = "测试dubbo")
-    @PostMapping("/testdubbo")
-    public R<?> testDubbo(@RequestParam(name = "userid") String userId) {
-        DubboMemberUser userBasicInfo = dubboUserInfoService.getUserBasicInfo(userId);
-        return R.success(userBasicInfo);
-    }
+//    @ApiOperation(value = "测试dubbo")
+//    @PostMapping("/testdubbo")
+//    public R<?> testDubbo(@RequestParam(name = "userid") String userId) {
+//        DubboMemberUser userBasicInfo = dubboUserInfoService.getUserBasicInfo(userId);
+//        return R.success(userBasicInfo);
+//    }
 
 
     /**

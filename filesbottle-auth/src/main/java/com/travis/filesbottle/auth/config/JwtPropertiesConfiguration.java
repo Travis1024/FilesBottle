@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * @ClassName JwtProperties
- * @Description TODO
+ * @Description 读取filesbottle.jwt配置信息
  * @Author travis-wei
  * @Version v1.0
  * @Data 2023/4/3

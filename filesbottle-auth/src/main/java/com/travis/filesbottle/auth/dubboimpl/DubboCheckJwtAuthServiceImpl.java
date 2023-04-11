@@ -1,7 +1,6 @@
 package com.travis.filesbottle.auth.dubboimpl;
 
 import cn.hutool.core.util.StrUtil;
-import com.travis.filesbottle.auth.config.JwtPropertiesConfiguration;
 import com.travis.filesbottle.auth.utils.JwtTokenUtil;
 import com.travis.filesbottle.common.dubboservice.auth.DubboCheckJwtAuthService;
 import com.travis.filesbottle.common.dubboservice.auth.bo.DubboAuthUser;
@@ -13,7 +12,7 @@ import java.util.Map;
 
 /**
  * @ClassName DubboCheckJwtAuthServiceImpl
- * @Description TODO
+ * @Description Dubbo-鉴权服务实现
  * @Author travis-wei
  * @Version v1.0
  * @Data 2023/4/7

@@ -102,7 +102,8 @@ dubbo:
     dispatcher: message
   registry:
     address: nacos://140.246.171.8:8848?username=nacos&password=nacos
-    parameters.namespace: 64e29a8b-edd7-4f60-b941-24111fb1081c
+    parameters:
+      namespace: 64e29a8b-edd7-4f60-b941-24111fb1081c
   provider:
     timeout: 10000
 #    parameters.register-consumer-url: true

@@ -11,6 +11,119 @@ server:
     context-path: /api/document
 
 
+--- # 配置mongodb信息
+spring:
+  data:
+    mongodb:
+      host: 140.246.171.8
+      port: 27017
+      authentication-database: admin
+      username: root
+      password: w1270278575
+      database: filesbottle
+
+
+--- # 配置数据库连接池
+spring:
+  datasource:
+    druid:
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      url: jdbc:mysql://140.246.171.8:3306/filesbottle_dms?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=UTC
+      username: root
+      password: w1270278575
+      # 初始化大小，最小，最大
+      initial-size: 20
+      max-active: 1000
+      min-idle: 50
+      # 配置获取连接等待超时的时间
+      max-wait: 60000
+      # 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒
+      time-between-eviction-runs-millis: 60000
+      # 配置一个连接在池中最小生存的时间，单位是毫秒
+      min-evictable-idle-time-millis: 300000
+      # 打开PSCache，并且指定每个连接上PSCache的大小
+      pool-prepared-statements: true
+      max-pool-prepared-statement-per-connection-size: 20
+      # 配置监控统计拦截的 Filter，去掉后监控界面 SQL 无法统计，wall 用于防火墙，日志 slf4j
+      filters: stat
+      # 通过connectProperties属性来打开mergeSql功能；慢SQL记录
+      connection-properties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=5000
+      # 建议配置为true，不影响性能，并且保证安全性。
+      test-while-idle: true
+
+
+--- # 配置druid监控（web-stat）
+spring:
+  datasource:
+    druid:
+      # =====WebStatFilter配置
+      web-stat-filter:
+        enabled: true
+        url-pattern: /*
+        exclusions: "*.js,*.gif,*.jpg,*.bmp,*.png,*.css,*.ico,/druid/*"
+        # 开启session统计功能
+        session-stat-enable: true
+        # session的最大个数
+        session-stat-max-count: 500
+
+      # =====StatViewServlet配置,用于展示Druid的统计信息
+      stat-view-servlet:
+        enabled: true
+        url-pattern: /druid/*
+        # 允许清空统计数据
+        reset-enable: true
+        # 监控页面登录的用户名
+        login-username: root
+        # 监控页面登录的密码
+        login-password: w1270278575
+        # 允许的IP，如果允许所有访问，需要对allow进行置空
+        allow:
+        # 拒绝访问的IP
+        # deny:
+
+      # =====慢sql配置
+      filter:
+        stat:
+          # 数据库类型
+          db-type: mysql
+          # 开启慢SQL记录功能
+          log-slow-sql: true
+          # 超过3000毫秒，记录到日志
+          slow-sql-millis: 3000
+
+
+--- # 配置sentinel信息
+spring:
+  cloud:
+    sentinel:
+      enabled: true
+      eager: true
+      transport:
+        dashboard: 127.0.0.1:8858
+        port: 8719
+
+
+# 配置dubbo信息
+dubbo:
+  application:
+    name: dubbo-${spring.application.name}
+  protocol:
+    port: -1
+    name: dubbo
+    threads: 400
+    threadpool: cached
+    dispatcher: message
+  registry:
+    address: nacos://140.246.171.8:8848?username=nacos&password=nacos
+    parameters:
+      namespace: 64e29a8b-edd7-4f60-b941-24111fb1081c
+  # parameters.register-consumer-url: true
+  # 设置消费者超时时间为3秒
+  consumer:
+    timeout: 10000
+
+
+
 # 设置日志文件名称、日志配置文件路径
 logging:
   config: classpath:logback-dev.xml

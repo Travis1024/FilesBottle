@@ -7,7 +7,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 
 /**
  * @ClassName MemberApplication
- * @Description TODO
+ * @Description MemberApplication
  * @Author travis-wei
  * @Version v1.0
  * @Data 2023/4/5

@@ -2,7 +2,7 @@ package com.travis.filesbottle.common.constant;
 
 /**
  * @ClassName JwtConstants
- * @Description TODO
+ * @Description Jwt常量定义
  * @Author travis-wei
  * @Version v1.0
  * @Data 2023/4/3

@@ -31,7 +31,7 @@ import java.util.List;
 
 /**
  * @ClassName CheckJwtAuthFilter
- * @Description TODO
+ * @Description gateway鉴权过滤器
  * @Author travis-wei
  * @Version v1.0
  * @Data 2023/4/6

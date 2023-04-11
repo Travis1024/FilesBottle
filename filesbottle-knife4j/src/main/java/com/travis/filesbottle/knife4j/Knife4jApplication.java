@@ -6,7 +6,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 
 /**
  * @ClassName Knife4jApplication
- * @Description TODO
+ * @Description Knife4jApplication
  * @Author travis-wei
  * @Version v1.0
  * @Data 2023/4/3

@@ -14,7 +14,7 @@ import java.util.List;
 
 /**
  * @ClassName DubboMemberUserImpl
- * @Description TODO
+ * @Description Dubbo-用户基本信息服务实现类
  * @Author travis-wei
  * @Version v1.0
  * @Data 2023/4/5

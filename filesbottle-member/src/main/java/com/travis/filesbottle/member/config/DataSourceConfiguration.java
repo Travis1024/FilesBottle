@@ -9,7 +9,7 @@ import javax.sql.DataSource;
 
 /**
  * @ClassName DataSourceConfiguration
- * @Description TODO
+ * @Description 向Bean中注入数据库连接池对象
  * @Author travis-wei
  * @Version v1.0
  * @Data 2023/4/5

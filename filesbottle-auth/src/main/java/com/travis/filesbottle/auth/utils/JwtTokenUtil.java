@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * @ClassName JwtTokenUtil
- * @Description TODO
+ * @Description Jwt Token工具类
  * @Author travis-wei
  * @Version v1.0
  * @Data 2023/4/3
