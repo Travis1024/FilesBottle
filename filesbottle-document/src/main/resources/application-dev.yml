@@ -52,6 +52,16 @@ spring:
       test-while-idle: true
 
 
+--- # 配置 seata
+seata:
+  # 事务分组名称，要和服务端对应
+  tx-service-group: filesbottle-group
+  service:
+    vgroup-mapping:
+      filesbottle-group: default
+
+
+
 --- # 配置druid监控（web-stat）
 spring:
   datasource:
@@ -121,6 +131,17 @@ dubbo:
   # 设置消费者超时时间为3秒
   consumer:
     timeout: 10000
+
+
+# 设置线程池创建参数
+mythread:
+  corePoolSize: 5
+  maximumPoolSize: 20
+  # 单位为毫秒
+  keepAliveTime: 60000
+  # 任务等待队列的最大容量
+  maxBlockingCapacity: 1024
+
 
 
 

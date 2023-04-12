@@ -5,6 +5,7 @@ import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.travis.filesbottle.common.dubboservice.document.DubboDocUpdateDataService;
 import com.travis.filesbottle.common.dubboservice.document.DubboDocUserInfoService;
 import com.travis.filesbottle.common.dubboservice.document.bo.DubboDocumentUser;
 import com.travis.filesbottle.common.enums.BizCodeEnum;
@@ -14,8 +15,11 @@ import com.travis.filesbottle.document.enums.FileTypeEnum;
 import com.travis.filesbottle.document.mapper.DocumentMapper;
 import com.travis.filesbottle.document.service.DocumentService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import io.seata.spring.annotation.GlobalTransactional;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +30,7 @@ import java.io.InputStream;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * <p>
@@ -38,6 +43,8 @@ import java.util.List;
 @Service
 public class DocumentServiceImpl extends ServiceImpl<DocumentMapper, FileDocument> implements DocumentService {
 
+    private static final String FILE_NAME = "filename";
+
     @Autowired
     private DocumentMapper documentMapper;
 
@@ -46,6 +53,8 @@ public class DocumentServiceImpl extends ServiceImpl<DocumentMapper, FileDocumen
 
     @DubboReference
     private DubboDocUserInfoService dubboDocUserInfoService;
+    @DubboReference
+    private DubboDocUpdateDataService dubboDocUpdateDataService;
 
 
     /**
@@ -103,13 +112,11 @@ public class DocumentServiceImpl extends ServiceImpl<DocumentMapper, FileDocumen
         fileDocument.setDocSuffix(suffix);
         fileDocument.setDocDescription(description);
 
-        /**
-         * 上传文件
-         */
+        // 上传文件到GridFs
         try {
             String gridFsId = uploadFileToGridFs(file.getInputStream(), file.getContentType());
             if (StrUtil.isEmpty(gridFsId)) {
-                return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.BAD_REQUEST, "上传异常，文件上传失败！")
+                return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.BAD_REQUEST, "上传异常，文件上传失败！");
             }
             fileDocument.setDocGridfsId(gridFsId);
         } catch (IOException e) {
@@ -121,11 +128,10 @@ public class DocumentServiceImpl extends ServiceImpl<DocumentMapper, FileDocumen
         fileDocument.setDocProperty(property);
 
         // 更新mysql数据库数据，开启事务
-        try {
-            String result = updateMysqlDataWhenUpload(userId, userInfo.getUserTeamId(), property, fileDocument);
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            // TODO 删除mongodb中的文件
+        int result = updateMysqlDataWhenUpload(userId, userInfo.getUserTeamId(), property, fileDocument);
+        if (result == 0) {
+            // 删除mongodb中的文件
+            deleteFileByGridFsId(fileDocument.getDocGridfsId());
             return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.BAD_REQUEST, "mysql数据更新失败，文件上传失败！");
         }
 
@@ -133,13 +139,47 @@ public class DocumentServiceImpl extends ServiceImpl<DocumentMapper, FileDocumen
     }
 
 
-    @Transactional
-    public String updateMysqlDataWhenUpload(String userId, String teamId, String property,FileDocument fileDocument) {
-        // TODO 增加团队文档和个人文档的数量,增加文件记录
-
-        return null;
+    /**
+     * @MethodName deleteFileByGridFsId
+     * @Description 根据gridFsid删除mongodb中的文件
+     * @Author travis-wei
+     * @Data 2023/4/12
+     * @param gridFsId
+     * @Return void
+     **/
+    private void deleteFileByGridFsId(String gridFsId) {
+        Query deleteQuery = new Query().addCriteria(Criteria.where(FILE_NAME).is(gridFsId));
+        gridFsTemplate.delete(deleteQuery);
     }
 
+
+    /**
+     * @MethodName updateMysqlDataWhenUpload
+     * @Description 更新mysql数据库中的数据信息
+     * @Author travis-wei
+     * @Data 2023/4/12
+     * @param userId
+     * @param teamId
+     * @param property
+     * @param fileDocument
+     * @Return java.lang.Integer
+     **/
+    @GlobalTransactional
+    public Integer updateMysqlDataWhenUpload(String userId, String teamId, String property,FileDocument fileDocument) {
+        try {
+            // 增加文件记录
+            documentMapper.insert(fileDocument);
+            // 增加个人文档数量
+            dubboDocUpdateDataService.updateUserDocNumber(userId, property, "1");
+            // 增加团队文档数量
+            dubboDocUpdateDataService.updateTeamDocNumber(userId, property, "1");
+
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            return 0;
+        }
+        return 1;
+    }
 
 
     /**
@@ -166,10 +206,9 @@ public class DocumentServiceImpl extends ServiceImpl<DocumentMapper, FileDocumen
     }
 
 
-
     /**
      * @MethodName searchFileByMd5
-     * @Description 根据md5搜索文件信息，如果没有找到返回null
+     * @Description 根据md5搜索团队文件中的文件信息，如果没有找到返回null
      * @Author travis-wei
      * @Data 2023/4/11
      * @param md5
@@ -178,7 +217,7 @@ public class DocumentServiceImpl extends ServiceImpl<DocumentMapper, FileDocumen
     @Override
     public FileDocument searchFileByMd5(String md5, String teamId) {
         QueryWrapper<FileDocument> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq(FileDocument.DOC_MD5, md5);
+        queryWrapper.eq(FileDocument.DOC_MD5, md5).eq(FileDocument.DOC_TEAMID, teamId);
         return documentMapper.selectOne(queryWrapper);
     }
 }

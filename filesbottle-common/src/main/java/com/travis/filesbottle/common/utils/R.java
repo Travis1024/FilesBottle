@@ -1,5 +1,6 @@
 package com.travis.filesbottle.common.utils;
 
+import cn.hutool.core.util.StrUtil;
 import com.travis.filesbottle.common.enums.BizCodeEnum;
 import javafx.util.Pair;
 import lombok.Data;
@@ -141,6 +142,7 @@ public class R<T> implements Serializable {
                 .setCode(BizCodeEnum.buildErrorCode(moudleCode, bizCode).getKey())
                 .setMessage(message);
     }
+
 
     /**
      * @MethodName error

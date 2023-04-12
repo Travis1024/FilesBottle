@@ -6,10 +6,12 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.travis.filesbottle.common.constant.PageConstants;
 import com.travis.filesbottle.common.enums.BizCodeEnum;
+import com.travis.filesbottle.common.utils.BizCodeUtil;
 import com.travis.filesbottle.common.utils.R;
 import com.travis.filesbottle.document.entity.FileDocument;
 import com.travis.filesbottle.document.enums.FileTypeEnum;
 import com.travis.filesbottle.document.service.DocumentService;
+import com.travis.filesbottle.document.service.TaskExecuteService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +42,9 @@ public class DocumentsController {
     @Autowired
     private DocumentService documentService;
 
+    @Autowired
+    private TaskExecuteService taskExecuteService;
+
     @ApiOperation("获取文档总数")
     @GetMapping("/totalNumber")
     public R<?> getTotalDataNumber() {
@@ -68,6 +73,7 @@ public class DocumentsController {
         return R.success(documentList);
     }
 
+    @ApiOperation(value = "表单上传文件")
     @PostMapping("/upload")
     public R<?> documentUpload(@RequestParam("file") MultipartFile file, @RequestParam("property") String property, @RequestParam("description") String description, ServerHttpRequest request) {
         String userId = request.getHeaders().getFirst(USER_ID);
@@ -79,47 +85,36 @@ public class DocumentsController {
             return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.BAD_REQUEST, "无法获取文件名，请检查文件！");
         }
 
+        FileDocument fileDocument;
+
         try {
-
-            String suffix = originalFilename.substring(originalFilename.lastIndexOf(".") + 1);
-            // 判断文件类型是否支持预览
-            boolean judgeSupportType = FileTypeEnum.judgeSupportType(suffix);
-
             // 获取文件的md5值
             String fileMd5 = SecureUtil.md5(file.getInputStream());
+            // 上传文件业务
+            R<?> result = documentService.uploadFile(userId, userName, fileMd5, property, description, file);
+            // 如果业务状态码为失败状态
+            if (!BizCodeUtil.isCodeSuccess(result.getCode())) {
+                return result;
+            }
+            fileDocument = (FileDocument) result.getData();
 
-            // 上传文件 TODO 判断业务状态码
-            documentService.uploadFile(userId, userName, fileMd5, property, description, file);
-
+            // 文件记录中的创建者id和请求头的id不同，表明团队文件中已经存在该文档
             if (!fileDocument.getDocUserid().equals(userId)) {
-                // TODO 团队文件中已经存在该文档
+                return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.BAD_REQUEST, "团队文件库中已存在该文件！");
             }
 
-            if (judgeSupportType) {
-                // TODO 执行生成预览文件的操作
-                if (suffix.equals(FileTypeEnum.PDF.getFileType())) {
-
-                } else if (suffix.equals(FileTypeEnum.XLS.getFileType())) {
-
-                } else if (suffix.equals(FileTypeEnum.XLSX.getFileType())) {
-
-                } else if (suffix.equals(FileTypeEnum.DOC.getFileType())) {
-
-                } else if (suffix.equals(FileTypeEnum.DOCX.getFileType())) {
-
-                } else if (suffix.equals(FileTypeEnum.PPT.getFileType())) {
-
-                } else if (suffix.equals(FileTypeEnum.PPTX.getFileType())) {
-
-                }
+            // 如果文件类型为已知的支持文件预览的类型
+            if (!fileDocument.getDocContentType().equals((byte) 0)) {
+                // 异步执行生成预览文件、更新mysql数据、更新elasticSearch数据
+                taskExecuteService.generatePreviewFile(fileDocument);
             }
-
-
 
         } catch (IOException exception) {
             log.error(exception.getMessage());
+            return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.UNKNOW, exception.getMessage());
         }
 
+        return R.success("文件上传成功！", fileDocument);
     }
 
 }
