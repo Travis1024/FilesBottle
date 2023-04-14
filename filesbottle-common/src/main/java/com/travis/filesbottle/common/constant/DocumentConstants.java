@@ -14,4 +14,11 @@ public class DocumentConstants {
     public final static String DOC_PRIVATE = "private";
 
     public final static String DOC_PUBLIC = "public";
+
+    /**
+     * @see <a href="https://blog.csdn.net/qq_36551991/article/details/109499487">常见content-type</a>
+     */
+    public final static String PDF_CONTENT_TYPE = "application/pdf";
+
+    public final static String ES_DOCUMENT_NAME = "document";
 }

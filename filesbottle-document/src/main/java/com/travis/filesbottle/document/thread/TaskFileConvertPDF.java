@@ -1,5 +1,8 @@
 package com.travis.filesbottle.document.thread;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 /**
  * @ClassName TaskFileConvertPDF
  * @Description TODO
@@ -9,9 +12,11 @@ package com.travis.filesbottle.document.thread;
  */
 public interface TaskFileConvertPDF extends Runnable {
 
-    public void convertFile();
+    public InputStream convertFile();
 
-    public void updateMysqlData();
+    public void updateMysqlData(String previewId);
 
-    public void uploadFileToEs();
+    public String uploadFileToEs() throws IOException;
+
+    public String uploadPreviewFileToGridFs(InputStream inputStream);
 }

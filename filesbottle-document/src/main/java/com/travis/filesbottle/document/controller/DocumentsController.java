@@ -9,17 +9,16 @@ import com.travis.filesbottle.common.enums.BizCodeEnum;
 import com.travis.filesbottle.common.utils.BizCodeUtil;
 import com.travis.filesbottle.common.utils.R;
 import com.travis.filesbottle.document.entity.FileDocument;
-import com.travis.filesbottle.document.enums.FileTypeEnum;
 import com.travis.filesbottle.document.service.DocumentService;
 import com.travis.filesbottle.document.service.TaskExecuteService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.List;
 
@@ -75,9 +74,9 @@ public class DocumentsController {
 
     @ApiOperation(value = "表单上传文件")
     @PostMapping("/upload")
-    public R<?> documentUpload(@RequestParam("file") MultipartFile file, @RequestParam("property") String property, @RequestParam("description") String description, ServerHttpRequest request) {
-        String userId = request.getHeaders().getFirst(USER_ID);
-        String userName = request.getHeaders().getFirst(USER_NAME);
+    public R<?> documentUpload(@RequestParam("file") MultipartFile file, @RequestParam("property") String property, @RequestParam("description") String description, HttpServletRequest request) {
+        String userId = request.getHeader(USER_ID);
+        String userName = request.getHeader(USER_NAME);
         String originalFilename = file.getOriginalFilename();
 
         // 检查originalFilename是否为空
@@ -106,7 +105,7 @@ public class DocumentsController {
             // 如果文件类型为已知的支持文件预览的类型
             if (!fileDocument.getDocContentType().equals((byte) 0)) {
                 // 异步执行生成预览文件、更新mysql数据、更新elasticSearch数据
-                taskExecuteService.generatePreviewFile(fileDocument);
+                taskExecuteService.generatePreviewFile(fileDocument, file.getInputStream());
             }
 
         } catch (IOException exception) {
@@ -115,6 +114,7 @@ public class DocumentsController {
         }
 
         return R.success("文件上传成功！", fileDocument);
+//        return R.success("文件上传成功！");
     }
 
 }

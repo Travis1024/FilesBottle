@@ -184,14 +184,14 @@ public class DocumentServiceImpl extends ServiceImpl<DocumentMapper, FileDocumen
 
     /**
      * @MethodName uploadFileToGridFs
-     * @Description 向mongodb中上传文件，返回gridFsId
+     * @Description 向mongodb中上传文件，返回gridFsId或者previewId
      * @Author travis-wei
      * @Data 2023/4/11
      * @param inputStream
      * @param contentType
      * @Return java.lang.String  上传失败返回null
      **/
-    private String uploadFileToGridFs(InputStream inputStream, String contentType) {
+    public String uploadFileToGridFs(InputStream inputStream, String contentType) {
         // 随机生成gridFsId
         String gridFsId = IdUtil.simpleUUID();
 

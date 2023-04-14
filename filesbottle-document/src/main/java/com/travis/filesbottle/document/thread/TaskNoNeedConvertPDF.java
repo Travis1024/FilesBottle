@@ -3,6 +3,8 @@ package com.travis.filesbottle.document.thread;
 import com.travis.filesbottle.document.entity.FileDocument;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.InputStream;
+
 /**
  * @ClassName TaskNoNeedConvertPDF
  * @Description TODO
@@ -14,25 +16,31 @@ import lombok.extern.slf4j.Slf4j;
 public class TaskNoNeedConvertPDF implements Runnable, TaskFileConvertPDF{
 
     private FileDocument fileDocument;
+    private InputStream fileInputStream;
 
-    public TaskNoNeedConvertPDF(FileDocument fileDocument) {
+    public TaskNoNeedConvertPDF(FileDocument fileDocument, InputStream fileInputStream) {
         this.fileDocument = fileDocument;
+        this.fileInputStream = fileInputStream;
     }
 
     @Override
-    public void convertFile() {
-        // no action
+    public InputStream convertFile() {
+        return null;
+    }
+
+    @Override
+    public void updateMysqlData(String previewId) {
 
     }
 
     @Override
-    public void updateMysqlData() {
-
+    public String uploadFileToEs() {
+        return null;
     }
 
     @Override
-    public void uploadFileToEs() {
-
+    public String uploadPreviewFileToGridFs(InputStream inputStream) {
+        return null;
     }
 
     @Override

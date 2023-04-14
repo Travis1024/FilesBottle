@@ -50,6 +50,32 @@ spring:
       test-while-idle: true
 
 
+--- # 配置 seata
+seata:
+  # 事务分组名称，要和服务端对应
+  tx-service-group: filesbottle
+  service:
+    vgroup-mapping:
+      filesbottle: default
+  registry:
+    type: nacos
+    nacos:
+      server-addr: 140.246.171.8:8848
+      namespace: 64e29a8b-edd7-4f60-b941-24111fb1081c
+      group: DEFAULT_GROUP
+      username: nacos
+      password: nacos
+  config:
+    type: nacos
+    nacos:
+      server-addr: 140.246.171.8:8848
+      namespace: 64e29a8b-edd7-4f60-b941-24111fb1081c
+      group: DEFAULT_GROUP
+      username: nacos
+      password: nacos
+
+
+
 --- # 配置druid监控（web-stat）
 spring:
   datasource:
@@ -89,6 +115,18 @@ spring:
           # 超过3000毫秒，记录到日志
           slow-sql-millis: 3000
 
+
+--- # 配置sentinel信息
+spring:
+  cloud:
+    sentinel:
+      enabled: true
+      eager: true
+      transport:
+        dashboard: 127.0.0.1:8858
+        port: 8719
+
+
 # 配置dubbo信息
 dubbo:
   application:
@@ -102,7 +140,8 @@ dubbo:
     dispatcher: message
   registry:
     address: nacos://140.246.171.8:8848?username=nacos&password=nacos
-    parameters.namespace: 64e29a8b-edd7-4f60-b941-24111fb1081c
+    parameters:
+      namespace: 64e29a8b-edd7-4f60-b941-24111fb1081c
   provider:
     timeout: 10000
 #    parameters.register-consumer-url: true
