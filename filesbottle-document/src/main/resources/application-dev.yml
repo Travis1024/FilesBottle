@@ -11,6 +11,12 @@ server:
     context-path: /api/document
 
 
+--- # jodconverter配置
+jodconverter:
+
+
+
+
 --- # 修改上传文件大小的限制
 spring:
   servlet:

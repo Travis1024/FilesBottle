@@ -16,7 +16,7 @@ public interface TaskFileConvertPDF extends Runnable {
 
     public void updateMysqlData(String previewId);
 
-    public String uploadFileToEs() throws IOException;
+    public void uploadFileToEs() throws IOException;
 
     public String uploadPreviewFileToGridFs(InputStream inputStream);
 }

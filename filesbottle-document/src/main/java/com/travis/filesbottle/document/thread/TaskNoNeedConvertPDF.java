@@ -34,8 +34,7 @@ public class TaskNoNeedConvertPDF implements Runnable, TaskFileConvertPDF{
     }
 
     @Override
-    public String uploadFileToEs() {
-        return null;
+    public void uploadFileToEs() {
     }
 
     @Override

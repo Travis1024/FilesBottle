@@ -43,11 +43,11 @@ import java.util.List;
 @Slf4j
 public class TaskPptConvertPDF implements Runnable, TaskFileConvertPDF{
 
+    private FileDocument fileDocument;
+    private InputStream fileInputStream;
     private RestHighLevelClient restHighLevelClient;
     private DocumentMapper documentMapper;
     private GridFsTemplate gridFsTemplate;
-    private FileDocument fileDocument;
-    private InputStream fileInputStream;
 
 
     public TaskPptConvertPDF(FileDocument fileDocument, InputStream fileInputStream) {
@@ -256,7 +256,7 @@ public class TaskPptConvertPDF implements Runnable, TaskFileConvertPDF{
     }
 
     @Override
-    public String uploadFileToEs() throws IOException {
+    public void uploadFileToEs() throws IOException {
         // no action
         EsDocument esDocument = new EsDocument();
         esDocument.setGridFsId(fileDocument.getDocGridfsId());
@@ -274,8 +274,6 @@ public class TaskPptConvertPDF implements Runnable, TaskFileConvertPDF{
 
         IndexResponse indexResponse = restHighLevelClient.index(indexRequest, RequestOptions.DEFAULT);
         log.info(indexResponse.toString());
-
-        return null;
     }
 
     @Override

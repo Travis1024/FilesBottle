@@ -63,6 +63,9 @@
         <poi.verison>5.2.3</poi.verison>
         <spring.data.elasticsearch.version>4.3.9</spring.data.elasticsearch.version>
         <server.elasticsearch.version>7.16.2</server.elasticsearch.version>
+        <jsoup.version>1.15.4</jsoup.version>
+        <jodconverter.version>4.4.6</jodconverter.version>
+
     </properties>
 
 
@@ -304,6 +307,12 @@
             </dependency>
 
             <dependency>
+                <groupId>com.itextpdf.tool</groupId>
+                <artifactId>xmlworker</artifactId>
+                <version>${itextpdf.version}</version>
+            </dependency>
+
+            <dependency>
                 <groupId>org.apache.poi</groupId>
                 <artifactId>poi</artifactId>
                 <version>${poi.verison}</version>
@@ -331,6 +340,30 @@
                 <groupId>org.elasticsearch.client</groupId>
                 <artifactId>elasticsearch-rest-high-level-client</artifactId>
                 <version>${server.elasticsearch.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.jsoup</groupId>
+                <artifactId>jsoup</artifactId>
+                <version>${jsoup.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.jodconverter</groupId>
+                <artifactId>jodconverter-local</artifactId>
+                <version>${jodconverter.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.jodconverter</groupId>
+                <artifactId>jodconverter-core</artifactId>
+                <version>${jodconverter.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.jodconverter</groupId>
+                <artifactId>jodconverter-spring-boot-starter</artifactId>
+                <version>${jodconverter.version}</version>
             </dependency>
 
 
