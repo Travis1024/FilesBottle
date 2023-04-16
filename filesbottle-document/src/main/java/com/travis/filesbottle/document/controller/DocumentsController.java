@@ -4,22 +4,31 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.travis.filesbottle.common.constant.Constants;
+import com.travis.filesbottle.common.constant.DocumentConstants;
 import com.travis.filesbottle.common.constant.PageConstants;
 import com.travis.filesbottle.common.enums.BizCodeEnum;
 import com.travis.filesbottle.common.utils.BizCodeUtil;
 import com.travis.filesbottle.common.utils.R;
 import com.travis.filesbottle.document.entity.FileDocument;
+import com.travis.filesbottle.document.entity.dto.DownloadDocument;
 import com.travis.filesbottle.document.service.DocumentService;
 import com.travis.filesbottle.document.service.TaskExecuteService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.List;
 
 /**
@@ -72,6 +81,53 @@ public class DocumentsController {
         return R.success(documentList);
     }
 
+    @ApiOperation(value = "获取预览文件(PDF)流，主要为可以转换成pdf的文件提供预览")
+    @GetMapping("/stream/preview")
+    public R<?> getPreviewDocStream(@RequestParam("sourceId") String sourceId) throws UnsupportedEncodingException {
+
+        R<?> previewDocStream = documentService.getPreviewDocStream(sourceId);
+        if (!BizCodeUtil.isCodeSuccess(previewDocStream.getCode())) {
+            // 返回失败的响应结果
+            return previewDocStream;
+        }
+        DownloadDocument data = (DownloadDocument) previewDocStream.getData();
+
+        return R.success("预览文件：pdf流获取成功！", data);
+    }
+
+    @ApiOperation(value = "获取源文件流，主要为源文件类型为pdf、图片的提供预览")
+    @GetMapping("/stream/source")
+    public R<?> getSourceDocStream(@RequestParam("sourceId") String sourceId) throws UnsupportedEncodingException {
+
+        R<?> sourceDocStream = documentService.getSourceDocStream(sourceId);
+        if (!BizCodeUtil.isCodeSuccess(sourceDocStream.getCode())) {
+            // 返回失败的响应结果
+            return sourceDocStream;
+        }
+        DownloadDocument data = (DownloadDocument) sourceDocStream.getData();
+
+        return R.success("源文件：流获取成功！", data);
+    }
+
+
+    @ApiOperation(value = "根据源文件ID下载源文件")
+    @GetMapping("/download/source")
+    public ResponseEntity<Object> downloadSourceDocument(@RequestParam("sourceId") String sourceId) throws UnsupportedEncodingException {
+
+        R<?> sourceDocStream = documentService.getSourceDocStream(sourceId);
+        if (!BizCodeUtil.isCodeSuccess(sourceDocStream.getCode())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(sourceDocStream);
+        }
+        DownloadDocument data = (DownloadDocument) sourceDocStream.getData();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;fileName=" + URLEncoder.encode(data.getDocName(), Constants.UTF8))
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(data.getBytes());
+    }
+
+
+
     @ApiOperation(value = "表单上传文件")
     @PostMapping("/upload")
     public R<?> documentUpload(@RequestParam("file") MultipartFile file, @RequestParam("property") String property, @RequestParam("description") String description, HttpServletRequest request) {
@@ -114,7 +170,6 @@ public class DocumentsController {
         }
 
         return R.success("文件上传成功！", fileDocument);
-//        return R.success("文件上传成功！");
     }
 
 }

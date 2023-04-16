@@ -11,6 +11,14 @@ server:
     context-path: /api/document
 
 
+--- # 修改上传文件大小的限制
+spring:
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+
+
 --- # 配置 elasticsearch
 spring:
   elasticsearch:
@@ -34,7 +42,7 @@ spring:
   datasource:
     druid:
       driver-class-name: com.mysql.cj.jdbc.Driver
-      url: jdbc:mysql://140.246.171.8:3306/filesbottle_dms?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=UTC
+      url: jdbc:mysql://140.246.171.8:3306/filesbottle_dms?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
       username: root
       password: w1270278575
       # 初始化大小，最小，最大

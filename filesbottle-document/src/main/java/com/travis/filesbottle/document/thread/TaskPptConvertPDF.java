@@ -4,6 +4,8 @@ import cn.hutool.core.util.IdUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.itextpdf.text.Document;
+import com.itextpdf.text.PageSize;
+import com.itextpdf.text.Rectangle;
 import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
@@ -12,6 +14,7 @@ import com.travis.filesbottle.document.entity.FileDocument;
 import com.travis.filesbottle.document.entity.bo.EsDocument;
 import com.travis.filesbottle.document.enums.FileTypeEnum;
 import com.travis.filesbottle.document.mapper.DocumentMapper;
+import com.travis.filesbottle.document.utils.ApplicationContextUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.hslf.usermodel.*;
 import org.apache.poi.xslf.usermodel.*;
@@ -20,17 +23,14 @@ import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.xcontent.XContentType;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.awt.*;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.List;
 
 /**
@@ -41,25 +41,22 @@ import java.util.List;
  * @Data 2023/4/12
  */
 @Slf4j
-@Component
 public class TaskPptConvertPDF implements Runnable, TaskFileConvertPDF{
 
-    @Autowired
     private RestHighLevelClient restHighLevelClient;
-
-    @Autowired
     private DocumentMapper documentMapper;
-    @Autowired
     private GridFsTemplate gridFsTemplate;
     private FileDocument fileDocument;
     private InputStream fileInputStream;
 
-    public TaskPptConvertPDF() {
-    }
 
     public TaskPptConvertPDF(FileDocument fileDocument, InputStream fileInputStream) {
         this.fileDocument = fileDocument;
         this.fileInputStream = fileInputStream;
+
+        this.restHighLevelClient = ApplicationContextUtil.getBean(RestHighLevelClient.class);
+        this.documentMapper = ApplicationContextUtil.getBean(DocumentMapper.class);
+        this.gridFsTemplate = ApplicationContextUtil.getBean(GridFsTemplate.class);
     }
 
     @Override
@@ -84,12 +81,15 @@ public class TaskPptConvertPDF implements Runnable, TaskFileConvertPDF{
     private InputStream pptToPdf(InputStream inputStream) {
         Document document = null;
         PdfWriter pdfWriter = null;
+        byte[] resultBytes = null;
+        ByteArrayOutputStream byteArrayOutputStream = null;
 
         try {
+            // 使用输入流ppt文件
             HSLFSlideShow hslfSlideShow = new HSLFSlideShow(inputStream);
-            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            byteArrayOutputStream = new ByteArrayOutputStream();
 
-            // 获取ppt页面
+            // 获取ppt幻灯片的尺寸
             Dimension dimension = hslfSlideShow.getPageSize();
             document = new Document();
 
@@ -97,28 +97,36 @@ public class TaskPptConvertPDF implements Runnable, TaskFileConvertPDF{
             pdfWriter = PdfWriter.getInstance(document, byteArrayOutputStream);
 
             document.open();
+            pdfWriter.open();
 
             PdfPTable pdfPTable = new PdfPTable(1);
             List<HSLFSlide> hslfSlideList = hslfSlideShow.getSlides();
 
+            // for获取每一张幻灯片
             for (HSLFSlide hslfSlide : hslfSlideList) {
                 // 设置字体、解决中文乱码问题
                 for (HSLFShape hslfShape : hslfSlide) {
-                    HSLFTextShape textShape = (HSLFTextShape) hslfShape;
-                    for (HSLFTextParagraph textParagraph : textShape.getTextParagraphs()) {
-                        for (HSLFTextRun textRun : textParagraph.getTextRuns()) {
-                            textRun.setFontFamily("宋体");
+                    // 判断是否为文本
+                    if (hslfShape instanceof HSLFTextShape) {
+                        HSLFTextShape textShape = (HSLFTextShape) hslfShape;
+                        for (HSLFTextParagraph textParagraph : textShape.getTextParagraphs()) {
+                            for (HSLFTextRun textRun : textParagraph.getTextRuns()) {
+                                textRun.setFontFamily("宋体");
+                            }
                         }
                     }
                 }
+                // 根据幻灯片尺寸创建图像对象
                 BufferedImage bufferedImage = new BufferedImage(((int) dimension.getWidth()), ((int) dimension.getHeight()), BufferedImage.TYPE_INT_RGB);
                 Graphics2D graphics2D = bufferedImage.createGraphics();
                 graphics2D.setPaint(Color.white);
                 graphics2D.setFont(new Font("宋体", Font.PLAIN, 12));
 
+                // 把内容写入图像对象
                 hslfSlide.draw(graphics2D);
                 graphics2D.dispose();
 
+                // 封装到Image对象中
                 com.itextpdf.text.Image image = com.itextpdf.text.Image.getInstance(bufferedImage, null);
                 image.scalePercent(50f);
 
@@ -127,7 +135,9 @@ public class TaskPptConvertPDF implements Runnable, TaskFileConvertPDF{
                 document.add(image);
             }
 
-            return new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
+            document.close();
+            pdfWriter.close();
+            resultBytes = byteArrayOutputStream.toByteArray();
 
         } catch (Exception exception) {
             log.error(exception.getMessage());
@@ -140,7 +150,10 @@ public class TaskPptConvertPDF implements Runnable, TaskFileConvertPDF{
                 pdfWriter.close();
             }
         }
+
+        return new ByteArrayInputStream(resultBytes);
     }
+
 
     /**
      * @MethodName pptxToPdf
@@ -153,41 +166,53 @@ public class TaskPptConvertPDF implements Runnable, TaskFileConvertPDF{
     private InputStream pptxToPdf(InputStream inputStream) {
         Document document = null;
         PdfWriter pdfWriter = null;
+        byte[] resultBytes = null;
+        ByteArrayOutputStream byteArrayOutputStream = null;
 
         try {
+            // 使用输入流pptx文件
             XMLSlideShow xmlSlideShow = new XMLSlideShow(inputStream);
-            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            byteArrayOutputStream = new ByteArrayOutputStream();
 
-            // 获取ppt页面
+            // 获取pptx幻灯片的尺寸
             Dimension dimension = xmlSlideShow.getPageSize();
+            // 创建一个写内容的容器
             document = new Document();
 
             // pdfWrite实例
             pdfWriter = PdfWriter.getInstance(document, byteArrayOutputStream);
 
             document.open();
+            pdfWriter.open();
 
             PdfPTable pdfPTable = new PdfPTable(1);
             List<XSLFSlide> xslfSlideList = xmlSlideShow.getSlides();
 
+            // for获取每一张幻灯片
             for (XSLFSlide xslfSlide : xslfSlideList) {
                 // 设置字体、解决中文乱码问题
                 for (XSLFShape xslfShape : xslfSlide) {
-                    XSLFTextShape textShape = (XSLFTextShape) xslfShape;
-                    for (XSLFTextParagraph textParagraph : textShape.getTextParagraphs()) {
-                        for (XSLFTextRun textRun : textParagraph.getTextRuns()) {
-                            textRun.setFontFamily("宋体");
+                    // 判断是否为文本
+                    if (xslfShape instanceof XSLFTextShape) {
+                        XSLFTextShape textShape = (XSLFTextShape) xslfShape;
+                        for (XSLFTextParagraph textParagraph : textShape.getTextParagraphs()) {
+                            for (XSLFTextRun textRun : textParagraph.getTextRuns()) {
+                                textRun.setFontFamily("宋体");
+                            }
                         }
                     }
                 }
+                // 根据幻灯片尺寸创建图像对象
                 BufferedImage bufferedImage = new BufferedImage(((int) dimension.getWidth()), ((int) dimension.getHeight()), BufferedImage.TYPE_INT_RGB);
                 Graphics2D graphics2D = bufferedImage.createGraphics();
                 graphics2D.setPaint(Color.white);
                 graphics2D.setFont(new Font("宋体", Font.PLAIN, 12));
 
+                // 把内容写入图像对象
                 xslfSlide.draw(graphics2D);
                 graphics2D.dispose();
 
+                // 封装到Image对象中
                 com.itextpdf.text.Image image = com.itextpdf.text.Image.getInstance(bufferedImage, null);
                 image.scalePercent(50f);
 
@@ -196,7 +221,9 @@ public class TaskPptConvertPDF implements Runnable, TaskFileConvertPDF{
                 document.add(image);
             }
 
-            return new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
+            document.close();
+            pdfWriter.close();
+            resultBytes = byteArrayOutputStream.toByteArray();
 
         } catch (Exception exception) {
             log.error(exception.getMessage());
@@ -209,6 +236,8 @@ public class TaskPptConvertPDF implements Runnable, TaskFileConvertPDF{
                 pdfWriter.close();
             }
         }
+
+        return new ByteArrayInputStream(resultBytes);
     }
 
     /**

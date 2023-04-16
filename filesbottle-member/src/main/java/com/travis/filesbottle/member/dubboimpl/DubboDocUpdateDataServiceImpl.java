@@ -49,9 +49,9 @@ public class DubboDocUpdateDataServiceImpl implements DubboDocUpdateDataService 
 
         // 需根据文档属性进行数据更新
         if (DocumentConstants.DOC_PUBLIC.equals(property)) {
-            StrUtil.format(sql, User.USER_DOC_PUBLIC_NUMBER, User.USER_DOC_PUBLIC_NUMBER, number);
+            sql = StrUtil.format(sql, User.USER_DOC_PUBLIC_NUMBER, User.USER_DOC_PUBLIC_NUMBER, number);
         } else if (DocumentConstants.DOC_PRIVATE.equals(property)) {
-            StrUtil.format(sql, User.USER_DOC_PRIVATE_NUMBER, User.USER_DOC_PRIVATE_NUMBER, number);
+            sql = StrUtil.format(sql, User.USER_DOC_PRIVATE_NUMBER, User.USER_DOC_PRIVATE_NUMBER, number);
         } else {
             log.error("文档属性错误！");
             throw new RuntimeException("文档属性错误！");
@@ -77,9 +77,9 @@ public class DubboDocUpdateDataServiceImpl implements DubboDocUpdateDataService 
         String sql = "{} = {} + {}";
 
         if (DocumentConstants.DOC_PUBLIC.equals(property)) {
-            StrUtil.format(sql, Team.TEAM_DOC_PUBLIC_NUMBER, Team.TEAM_DOC_PUBLIC_NUMBER, number);
+            sql = StrUtil.format(sql, Team.TEAM_DOC_PUBLIC_NUMBER, Team.TEAM_DOC_PUBLIC_NUMBER, number);
         } else if (DocumentConstants.DOC_PRIVATE.equals(property)) {
-            StrUtil.format(sql, Team.TEAM_DOC_PRIVATE_NUMBER, Team.TEAM_DOC_PRIVATE_NUMBER, number);
+            sql = StrUtil.format(sql, Team.TEAM_DOC_PRIVATE_NUMBER, Team.TEAM_DOC_PRIVATE_NUMBER, number);
         } else {
             log.error("文档属性错误！");
             throw new RuntimeException("文档属性错误！");

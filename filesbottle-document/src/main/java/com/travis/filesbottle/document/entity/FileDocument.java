@@ -51,6 +51,10 @@ public class FileDocument extends Model<FileDocument> {
     private String docMd5;
 
     @ApiModelProperty("文档类型")
+    @TableField("doc_content_type_text")
+    private String docContentTypeText;
+
+    @ApiModelProperty("文档类型码")
     @TableField("doc_content_type")
     private Byte docContentType;
 

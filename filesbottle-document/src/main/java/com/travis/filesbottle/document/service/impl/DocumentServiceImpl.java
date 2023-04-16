@@ -1,16 +1,22 @@
 package com.travis.filesbottle.document.service.impl;
 
+import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.util.IdUtil;
-import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.mongodb.client.gridfs.GridFSBucket;
+import com.mongodb.client.gridfs.GridFSDownloadStream;
+import com.mongodb.client.gridfs.model.GridFSDownloadOptions;
+import com.mongodb.client.gridfs.model.GridFSFile;
 import com.travis.filesbottle.common.dubboservice.document.DubboDocUpdateDataService;
 import com.travis.filesbottle.common.dubboservice.document.DubboDocUserInfoService;
 import com.travis.filesbottle.common.dubboservice.document.bo.DubboDocumentUser;
 import com.travis.filesbottle.common.enums.BizCodeEnum;
+import com.travis.filesbottle.common.utils.BizCodeUtil;
 import com.travis.filesbottle.common.utils.R;
 import com.travis.filesbottle.document.entity.FileDocument;
+import com.travis.filesbottle.document.entity.dto.DownloadDocument;
 import com.travis.filesbottle.document.enums.FileTypeEnum;
 import com.travis.filesbottle.document.mapper.DocumentMapper;
 import com.travis.filesbottle.document.service.DocumentService;
@@ -20,17 +26,18 @@ import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.gridfs.GridFsResource;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * <p>
@@ -50,6 +57,9 @@ public class DocumentServiceImpl extends ServiceImpl<DocumentMapper, FileDocumen
 
     @Autowired
     private GridFsTemplate gridFsTemplate;
+
+    @Autowired
+    private GridFSBucket gridFSBucket;
 
     @DubboReference
     private DubboDocUserInfoService dubboDocUserInfoService;
@@ -103,14 +113,15 @@ public class DocumentServiceImpl extends ServiceImpl<DocumentMapper, FileDocumen
         fileDocument = new FileDocument();
 
         fileDocument.setDocName(originalFilename);
-        // 计算文件大小，单位为MB
-        double docSize = file.getSize() / 1024.0 / 1024.0;
+        // 计算文件大小，单位为MB (1024 * 1024 = 1048576)
+        double docSize = file.getSize() / 1048576.0;
         fileDocument.setDocSize(docSize);
         fileDocument.setDocUploadDate(new Timestamp(new Date().getTime()));
         fileDocument.setDocMd5(fileMd5);
         fileDocument.setDocContentType(FileTypeEnum.getCodeByFileType(suffix));
         fileDocument.setDocSuffix(suffix);
         fileDocument.setDocDescription(description);
+        fileDocument.setDocContentTypeText(file.getContentType());
 
         // 上传文件到GridFs
         try {
@@ -218,6 +229,112 @@ public class DocumentServiceImpl extends ServiceImpl<DocumentMapper, FileDocumen
     public FileDocument searchFileByMd5(String md5, String teamId) {
         QueryWrapper<FileDocument> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq(FileDocument.DOC_MD5, md5).eq(FileDocument.DOC_TEAMID, teamId);
+        return documentMapper.selectOne(queryWrapper);
+    }
+
+
+    /**
+     * @MethodName getPreviewDocStream
+     * @Description 通过sourceId获取预览文件的字节流
+     * @Author travis-wei
+     * @Data 2023/4/14
+     * @param sourceId
+     * @Return com.travis.filesbottle.common.utils.R<?>
+     **/
+    @Override
+    public R<?> getPreviewDocStream(String sourceId) {
+        FileDocument fileDocument = getFileDocumentBySourceId(sourceId);
+        if (fileDocument == null) {
+            return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.BAD_REQUEST, "无法找到该文件！");
+        }
+        // 查找源文件ID对应的预览文件ID
+        String previewId = fileDocument.getDocPreviewId();
+        if (StrUtil.isEmpty(previewId)) {
+            return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.BAD_REQUEST, "无法找到该文件的预览文件，不支持在线预览！");
+        }
+
+        R<byte[]> bytesById = getDocumentBytesById(previewId);
+        if (!BizCodeUtil.isCodeSuccess(bytesById.getCode())) {
+            return bytesById;
+        }
+        DownloadDocument downloadDocument = new DownloadDocument();
+
+        downloadDocument.setDocName(fileDocument.getDocName());
+        downloadDocument.setDocSize(fileDocument.getDocSize());
+        downloadDocument.setDocDescription(fileDocument.getDocDescription());
+        downloadDocument.setDocSuffix(fileDocument.getDocSuffix());
+        downloadDocument.setDocGridfsId(fileDocument.getDocGridfsId());
+        downloadDocument.setDocContentTypeText(fileDocument.getDocContentTypeText());
+        downloadDocument.setDocPreviewId(fileDocument.getDocPreviewId());
+        downloadDocument.setBytes(bytesById.getData());
+
+        return R.success(downloadDocument);
+    }
+
+    /**
+     * @MethodName getSourceDocStream
+     * @Description 通过sourceId获取源文件字节流
+     * @Author travis-wei
+     * @Data 2023/4/14
+     * @param sourceId
+     * @Return com.travis.filesbottle.common.utils.R<?>
+     **/
+    @Override
+    public R<?> getSourceDocStream(String sourceId) {
+        R<byte[]> bytesById = getDocumentBytesById(sourceId);
+        if (!BizCodeUtil.isCodeSuccess(bytesById.getCode())) {
+            return bytesById;
+        }
+
+        FileDocument fileDocument = getFileDocumentBySourceId(sourceId);
+        DownloadDocument downloadDocument = new DownloadDocument();
+        if (fileDocument == null) {
+            R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.BAD_REQUEST, "无法找到该文件！");
+        }
+        downloadDocument.setDocName(fileDocument.getDocName());
+        downloadDocument.setDocSize(fileDocument.getDocSize());
+        downloadDocument.setDocDescription(fileDocument.getDocDescription());
+        downloadDocument.setDocSuffix(fileDocument.getDocSuffix());
+        downloadDocument.setDocGridfsId(fileDocument.getDocGridfsId());
+        downloadDocument.setDocContentTypeText(fileDocument.getDocContentTypeText());
+        downloadDocument.setDocPreviewId(fileDocument.getDocPreviewId());
+        downloadDocument.setBytes(bytesById.getData());
+
+        return R.success(downloadDocument);
+
+    }
+
+    private R<byte[]> getDocumentBytesById(String gridFsId) {
+        Query query = new Query().addCriteria(Criteria.where(FILE_NAME).is(gridFsId));
+        GridFSFile fsFile = gridFsTemplate.findOne(query);
+        if (fsFile == null || fsFile.getObjectId() == null) {
+            return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.BAD_REQUEST, "文件未找到，请检查文件ID是否正确！");
+        }
+
+        // 存储文件字节流
+        byte[] bytes = null;
+        try {
+            // 打开下载流对象，用于获取流对象
+            GridFSDownloadStream downloadStream = gridFSBucket.openDownloadStream(fsFile.getObjectId());
+            if (downloadStream.getGridFSFile().getLength() > 0) {
+                // 创建gridFsSource
+                GridFsResource fsResource = new GridFsResource(fsFile, downloadStream);
+                bytes = IoUtil.readBytes(fsResource.getInputStream());
+            } else {
+                return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.BAD_REQUEST, "文件下载流出现错误！");
+            }
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.UNKNOW, e.getMessage());
+        }
+        return R.success("文件字节流获取成功！", bytes);
+    }
+
+
+    private FileDocument getFileDocumentBySourceId(String sourceId) {
+        QueryWrapper<FileDocument> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq(FileDocument.DOC_GRIDFS_ID, sourceId);
+        // 查找源文件ID对应的数据记录
         return documentMapper.selectOne(queryWrapper);
     }
 }
