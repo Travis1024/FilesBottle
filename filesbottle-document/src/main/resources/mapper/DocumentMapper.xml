@@ -15,6 +15,7 @@
         <result column="doc_description" property="docDescription" />
         <result column="doc_gridfs_id" property="docGridfsId" />
         <result column="doc_preview_id" property="docPreviewId" />
+        <result column="doc_preview_url" property="docPreviewUrl" />
         <result column="doc_state" property="docState" />
         <result column="doc_error_message" property="docErrorMessage" />
         <result column="doc_reviewing" property="docReviewing" />
@@ -26,7 +27,7 @@
 
     <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
-        doc_zzid, doc_name, doc_size, doc_upload_date, doc_md5, doc_content_type_text, doc_file_type_code, doc_suffix, doc_description, doc_gridfs_id, doc_preview_id, doc_state, doc_error_message, doc_reviewing, doc_prohibited_word, doc_userid, doc_teamid, doc_property
+        doc_zzid, doc_name, doc_size, doc_upload_date, doc_md5, doc_content_type_text, doc_file_type_code, doc_suffix, doc_description, doc_gridfs_id, doc_preview_id, doc_preview_url, doc_state, doc_error_message, doc_reviewing, doc_prohibited_word, doc_userid, doc_teamid, doc_property
     </sql>
 
 </mapper>

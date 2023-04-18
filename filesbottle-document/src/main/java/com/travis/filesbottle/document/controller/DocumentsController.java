@@ -81,31 +81,16 @@ public class DocumentsController {
         return R.success(documentList);
     }
 
-//    @ApiOperation(value = "获取预览文件(PDF)流，主要为可以转换成pdf的文件提供预览")
-//    @GetMapping("/stream/preview")
-//    public R<?> getPreviewDocStream(@RequestParam("sourceId") String sourceId) throws UnsupportedEncodingException {
-//
-//        R<?> previewDocStream = documentService.getPreviewDocStream(sourceId);
-//        if (!BizCodeUtil.isCodeSuccess(previewDocStream.getCode())) {
-//            // 返回失败的响应结果
-//            return previewDocStream;
-//        }
-//        DownloadDocument data = (DownloadDocument) previewDocStream.getData();
-//
-//        return R.success("预览文件：pdf流获取成功！", data);
-//    }
 
-    @ApiOperation(value = "获取预览文件，可能 不支持在线预览｜pdf在线预览｜源文件在线预览｜kkFileView的url在线预览")
+    @ApiOperation(value = "获取预览文件，maybe 不支持在线预览｜pdf在线预览｜源文件在线预览｜kkFileView的url在线预览")
     @GetMapping("/stream/preview")
     public R<?> getPreviewStream(@RequestParam("sourceId") String sourceId) throws UnsupportedEncodingException {
-
-        R<?> sourceDocStream = documentService.getSourceDocStream(sourceId);
-        if (!BizCodeUtil.isCodeSuccess(sourceDocStream.getCode())) {
+        R<?> previewDocStream = documentService.getPreviewDocStream(sourceId);
+        if (!BizCodeUtil.isCodeSuccess(previewDocStream.getCode())) {
             // 返回失败的响应结果
-            return sourceDocStream;
+            return previewDocStream;
         }
-        DownloadDocument data = (DownloadDocument) sourceDocStream.getData();
-
+        DownloadDocument data = (DownloadDocument) previewDocStream.getData();
         return R.success("预览文件获取成功！", data);
     }
 
@@ -113,7 +98,7 @@ public class DocumentsController {
     @ApiOperation(value = "根据源文件ID下载源文件")
     @GetMapping("/download/source")
     public ResponseEntity<Object> downloadSourceDocument(@RequestParam("sourceId") String sourceId) throws UnsupportedEncodingException {
-
+        // 获取源文件流
         R<?> sourceDocStream = documentService.getSourceDocStream(sourceId);
         if (!BizCodeUtil.isCodeSuccess(sourceDocStream.getCode())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(sourceDocStream);
@@ -125,7 +110,6 @@ public class DocumentsController {
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(data.getBytes());
     }
-
 
 
     @ApiOperation(value = "表单上传文件")
@@ -152,12 +136,10 @@ public class DocumentsController {
                 return result;
             }
             fileDocument = (FileDocument) result.getData();
-
             // 文件记录中的创建者id和请求头的id不同，表明团队文件中已经存在该文档
             if (!fileDocument.getDocUserid().equals(userId)) {
                 return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.BAD_REQUEST, "团队文件库中已存在该文件！");
             }
-
             // 异步执行生成预览文件、更新mysql数据、更新elasticSearch数据的任务
             taskExecuteService.generatePreviewFile(fileDocument, file.getInputStream());
 
@@ -165,7 +147,6 @@ public class DocumentsController {
             log.error(exception.getMessage());
             return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.UNKNOW, exception.getMessage());
         }
-
         return R.success("文件上传成功！", fileDocument);
     }
 

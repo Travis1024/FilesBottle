@@ -234,48 +234,76 @@ public class DocumentServiceImpl extends ServiceImpl<DocumentMapper, FileDocumen
     }
 
 
-//    /**
-//     * @MethodName getPreviewDocStream
-//     * @Description 通过sourceId获取预览文件的字节流
-//     * @Author travis-wei
-//     * @Data 2023/4/14
-//     * @param sourceId
-//     * @Return com.travis.filesbottle.common.utils.R<?>
-//     **/
-//    @Override
-//    public R<?> getPreviewDocStream(String sourceId) {
-//        FileDocument fileDocument = getFileDocumentBySourceId(sourceId);
-//        if (fileDocument == null) {
-//            return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.BAD_REQUEST, "无法找到该文件！");
-//        }
-//        // 查找源文件ID对应的预览文件ID
-//        String previewId = fileDocument.getDocPreviewId();
-//        if (StrUtil.isEmpty(previewId)) {
-//            return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.BAD_REQUEST, "无法找到该文件的预览文件，不支持在线预览！");
-//        }
-//
-//        R<byte[]> bytesById = getDocumentBytesById(previewId);
-//        if (!BizCodeUtil.isCodeSuccess(bytesById.getCode())) {
-//            return bytesById;
-//        }
-//        DownloadDocument downloadDocument = new DownloadDocument();
-//
-//        downloadDocument.setDocName(fileDocument.getDocName());
-//        downloadDocument.setDocSize(fileDocument.getDocSize());
-//        downloadDocument.setDocDescription(fileDocument.getDocDescription());
-//        downloadDocument.setDocSuffix(fileDocument.getDocSuffix());
-//        downloadDocument.setDocGridfsId(fileDocument.getDocGridfsId());
-//        downloadDocument.setDocContentTypeText(fileDocument.getDocContentTypeText());
-//        downloadDocument.setDocPreviewId(fileDocument.getDocPreviewId());
-//        downloadDocument.setBytes(bytesById.getData());
-//        downloadDocument.setDocFileTypeCode(fileDocument.getDocFileTypeCode());
-//
-//        return R.success(downloadDocument);
-//    }
+    /**
+     * @MethodName getPreviewDocStream
+     * @Description 通过sourceId预览文件，maybe 不支持在线预览 or pdf在线预览 or 源文件在线预览 or kkFileView的url在线预览
+     * @Author travis-wei
+     * @Data 2023/4/14
+     * @param sourceId
+     * @Return com.travis.filesbottle.common.utils.R<?>
+     **/
+    @Override
+    public R<?> getPreviewDocStream(String sourceId) {
+
+        // 一、首先查找该源文件信息是否存在，如果不存在直接返回文件不存在的error信息
+        FileDocument fileDocument = getFileDocumentBySourceId(sourceId);
+        if (fileDocument == null) {
+            return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.BAD_REQUEST, "无法找到该文件！");
+        }
+        // 二、【情况一：文件不支持在线预览】判断该源文件的类型是否支持在线预览，如果不支持在线预览，返回状态码 18905（document模块 + 不支持预览）
+        Short typeCode = fileDocument.getDocFileTypeCode();
+        if (typeCode == null || typeCode == 0 || typeCode == -1 || (typeCode >= 601 && typeCode <= 1000)) {
+            return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.FILE_NOT_SUPPORT_PREVIEW);
+        }
+        // 三、分别处理支持预览的文件信息
+        DownloadDocument downloadDocument = new DownloadDocument();
+
+        if (typeCode >= 1 && typeCode <= 200) {
+            // 【情况二：文件支持pdf预览文件预览】支持转为pdf文件进行在线预览
+
+            // 3.1.1: 根据预览文件ID，获取预览文件流，如果获取预览文件流出现错误，返回错误信息
+            R<byte[]> bytesByIdResult = getDocumentBytesById(fileDocument.getDocPreviewId());
+            if (!BizCodeUtil.isCodeSuccess(bytesByIdResult.getCode())) {
+                return bytesByIdResult;
+            }
+            // 3.1.2: 组装DownloadDocument（返回信息）
+            downloadDocument.setDocGridfsId(fileDocument.getDocGridfsId());
+            downloadDocument.setDocPreviewId(fileDocument.getDocPreviewId());
+            downloadDocument.setDocName(fileDocument.getDocName());
+            downloadDocument.setDocSize(fileDocument.getDocSize());
+            downloadDocument.setDocContentTypeText(fileDocument.getDocContentTypeText());
+            downloadDocument.setDocSuffix(fileDocument.getDocSuffix());
+            downloadDocument.setDocFileTypeCode(fileDocument.getDocFileTypeCode());
+            downloadDocument.setDocDescription(fileDocument.getDocDescription());
+            // 获取到的预览文件字节流数据
+            downloadDocument.setBytes(bytesByIdResult.getData());
+
+        } else if (typeCode >= 201 && typeCode <= 400) {
+            // 【情况三：文件支持源文件在线预览】支持返回源文件流，进行在线预览
+            return getSourceDocStream(sourceId);
+
+        } else if (typeCode >= 401 && typeCode <= 600) {
+            // 【情况四：文件支持kkFileView在线预览】支持使用kkFileView进行在线预览
+
+            // 组装DownloadDocument（返回信息）
+            downloadDocument.setDocGridfsId(fileDocument.getDocGridfsId());
+            downloadDocument.setDocPreviewId(fileDocument.getDocPreviewId());
+            downloadDocument.setDocName(fileDocument.getDocName());
+            downloadDocument.setDocSize(fileDocument.getDocSize());
+            downloadDocument.setDocContentTypeText(fileDocument.getDocContentTypeText());
+            downloadDocument.setDocSuffix(fileDocument.getDocSuffix());
+            downloadDocument.setDocFileTypeCode(fileDocument.getDocFileTypeCode());
+            downloadDocument.setDocDescription(fileDocument.getDocDescription());
+            // TODO 判断这样做是否合理，如果一直请求该url就可能导致kkFileView服务宕机，考虑通过后端请求预览文件的URL，可以做限流
+            // 获取kkFileView提供的预览文档的url
+            downloadDocument.setPreviewUrl(fileDocument.getDocPreviewUrl());
+        }
+        return R.success(downloadDocument);
+    }
 
     /**
      * @MethodName getSourceDocStream
-     * @Description 通过sourceId获取源文件字节流
+     * @Description 通过源文件ID获取源文件字节流、为controller提供源文件下载
      * @Author travis-wei
      * @Data 2023/4/14
      * @param sourceId
@@ -283,50 +311,41 @@ public class DocumentServiceImpl extends ServiceImpl<DocumentMapper, FileDocumen
      **/
     @Override
     public R<?> getSourceDocStream(String sourceId) {
-//        R<byte[]> bytesById = getDocumentBytesById(sourceId);
-//        if (!BizCodeUtil.isCodeSuccess(bytesById.getCode())) {
-//            return bytesById;
-//        }
-
-        // 一、首先查找该源文件信息是否存在
+        // 一、首先根据源文件ID，从mysql数据库中查询FileDocument信息；如果没有找到，返回error信息
         FileDocument fileDocument = getFileDocumentBySourceId(sourceId);
         if (fileDocument == null) {
             return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.BAD_REQUEST, "无法找到该文件！");
         }
-        // 二、判断该源文件的类型是否支持在线预览，如果不支持在线预览，返回状态码 18905（document模块 + 不支持预览）
-        Short typeCode = fileDocument.getDocFileTypeCode();
-        if (typeCode == null || typeCode == 0 || typeCode == -1 || (typeCode >= 601 && typeCode <= 1000)) {
-            return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.FILE_NOT_SUPPORT_PREVIEW);
+        // 二、获取源文件流，如果获取文件流出现错误，返回错误信息
+        R<byte[]> bytesByIdResult = getDocumentBytesById(sourceId);
+        if (!BizCodeUtil.isCodeSuccess(bytesByIdResult.getCode())) {
+            return bytesByIdResult;
         }
-
-        // 三、分别处理支持预览的文件信息
-        if (typeCode >= 1 && typeCode <= 200) {
-            // 支持转为pdf文件进行在线预览
-
-        } else if (typeCode >= 201 && typeCode <= 400) {
-            // 支持返回源文件流，进行在线预览
-
-        } else if (typeCode >= 401 && typeCode <= 600) {
-            // 支持使用kkFileView进行在线预览
-
-        }
-
+        // 三、组装DownloadDocument信息（返回对象）
         DownloadDocument downloadDocument = new DownloadDocument();
 
+        downloadDocument.setDocGridfsId(fileDocument.getDocGridfsId());
+        downloadDocument.setDocPreviewId(fileDocument.getDocPreviewId());
         downloadDocument.setDocName(fileDocument.getDocName());
         downloadDocument.setDocSize(fileDocument.getDocSize());
-        downloadDocument.setDocDescription(fileDocument.getDocDescription());
-        downloadDocument.setDocSuffix(fileDocument.getDocSuffix());
-        downloadDocument.setDocGridfsId(fileDocument.getDocGridfsId());
         downloadDocument.setDocContentTypeText(fileDocument.getDocContentTypeText());
-        downloadDocument.setDocPreviewId(fileDocument.getDocPreviewId());
-        downloadDocument.setBytes(bytesById.getData());
+        downloadDocument.setDocSuffix(fileDocument.getDocSuffix());
         downloadDocument.setDocFileTypeCode(fileDocument.getDocFileTypeCode());
+        downloadDocument.setDocDescription(fileDocument.getDocDescription());
+        // 获取到的文件字节流数据
+        downloadDocument.setBytes(bytesByIdResult.getData());
 
         return R.success(downloadDocument);
-
     }
 
+    /**
+     * @MethodName getDocumentBytesById
+     * @Description 根据文件gridFsId获取文件流 (可以为源文件，也可以为预览文件)
+     * @Author travis-wei
+     * @Data 2023/4/18
+     * @param gridFsId
+     * @Return com.travis.filesbottle.common.utils.R<byte[]>
+     **/
     private R<byte[]> getDocumentBytesById(String gridFsId) {
         Query query = new Query().addCriteria(Criteria.where(FILE_NAME).is(gridFsId));
         GridFSFile fsFile = gridFsTemplate.findOne(query);
@@ -354,6 +373,14 @@ public class DocumentServiceImpl extends ServiceImpl<DocumentMapper, FileDocumen
     }
 
 
+    /**
+     * @MethodName getFileDocumentBySourceId
+     * @Description 根据源文件ID从mysql数据库中获取FileDocument信息（源文件）
+     * @Author travis-wei
+     * @Data 2023/4/18
+     * @param sourceId
+     * @Return com.travis.filesbottle.document.entity.FileDocument
+     **/
     private FileDocument getFileDocumentBySourceId(String sourceId) {
         QueryWrapper<FileDocument> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq(FileDocument.DOC_GRIDFS_ID, sourceId);

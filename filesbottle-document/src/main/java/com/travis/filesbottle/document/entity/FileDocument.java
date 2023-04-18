@@ -74,6 +74,10 @@ public class FileDocument extends Model<FileDocument> {
     @TableField("doc_preview_id")
     private String docPreviewId;
 
+    @ApiModelProperty("提供 kkFileView 提供预览的URL")
+    @TableField("doc_preview_url")
+    private String docPreviewUrl;
+
     @ApiModelProperty("文档上传状态(等待、正在、成功、失败)")
     @TableField("doc_state")
     private Byte docState;
@@ -123,6 +127,8 @@ public class FileDocument extends Model<FileDocument> {
     public static final String DOC_GRIDFS_ID = "doc_gridfs_id";
 
     public static final String DOC_PREVIEW_ID = "doc_preview_id";
+
+    public static final String DOC_PREVIEW_URL = "doc_preview_url";
 
     public static final String DOC_STATE = "doc_state";
 

@@ -25,7 +25,17 @@ public interface DocumentService extends IService<FileDocument> {
 
     FileDocument searchFileByMd5(String md5, String teamId);
 
-//    R<?> getPreviewDocStream(String sourceId);
+    /**
+     * 为controller提供在线预览的服务、返回源文件流 or 预览文件流 or URL
+     * @param sourceId
+     * @return
+     */
+    R<?> getPreviewDocStream(String sourceId);
 
+    /**
+     * 为controller提供源文件下载的服务
+     * @param sourceId
+     * @return
+     */
     R<?> getSourceDocStream(String sourceId);
 }
