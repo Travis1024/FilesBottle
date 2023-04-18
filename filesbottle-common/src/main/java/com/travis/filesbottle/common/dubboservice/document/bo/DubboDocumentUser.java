@@ -7,7 +7,7 @@ import java.io.Serializable;
 
 /**
  * @ClassName DubboDocumentUser
- * @Description TODO
+ * @Description Dubbo查询用户所属团队信息
  * @Author travis-wei
  * @Version v1.0
  * @Data 2023/4/11

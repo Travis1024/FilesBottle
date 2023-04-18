@@ -15,7 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @ClassName DubboDocUpdateDataServiceImpl
- * @Description TODO
+ * @Description Dubbo更新文档数据信息服务实现类
  * @Author travis-wei
  * @Version v1.0
  * @Data 2023/4/12

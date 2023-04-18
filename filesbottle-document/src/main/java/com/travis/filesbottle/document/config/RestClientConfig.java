@@ -20,12 +20,19 @@ public class RestClientConfig extends AbstractElasticsearchConfiguration {
 
     @Value("${spring.elasticsearch.uris}")
     private String url;
+    @Value("${spring.elasticsearch.connection-timeout}")
+    private Long connectTimeout;
+    @Value("${spring.elasticsearch.socket-timeout}")
+    private Long socketTimeout;
+
 
     @Override
     @Bean
     public RestHighLevelClient elasticsearchClient() {
         ClientConfiguration clientConfiguration = ClientConfiguration.builder()
                 .connectedTo(url)
+                .withConnectTimeout(connectTimeout)
+                .withSocketTimeout(socketTimeout)
                 .build();
         return RestClients.create(clientConfiguration).rest();
     }

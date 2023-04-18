@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Configuration;
 
 /**
  * @ClassName MongoConfig
- * @Description TODO
+ * @Description mongodb配置类
  * @Author travis-wei
  * @Version v1.0
  * @Data 2023/4/14

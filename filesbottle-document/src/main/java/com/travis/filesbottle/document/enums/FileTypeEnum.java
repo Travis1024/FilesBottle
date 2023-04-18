@@ -1,6 +1,5 @@
 package com.travis.filesbottle.document.enums;
 
-import lombok.Data;
 import lombok.Getter;
 
 /**
@@ -13,129 +12,124 @@ import lombok.Getter;
 @Getter
 public enum FileTypeEnum {
 
-    /**
-     * 未知类型，该类型不支持预览
-     */
-    UNKNOW((byte) 0, "unknow"),
-    /**
-     * PDF document
-     */
-    PDF((byte) 1, "pdf"),
 
     /**
-     * xls
+     * 定义类型码范围：
+     * -1   -->   （返回结果时）处理此枚举类不存在的类型
+     * 0    -->   （存入文件时）处理此枚举类不存在的类型
+     * ------------------------------------------
+     * 1   —  200    -->  支持转为pdf进行在线预览
+     * 201  —  400   -->  支持返回源文件流，进行在线预览
+     * 401  —  600   -->  使用kkfileview提供在线预览
+     * 601 —  1000   -->  不支持在线预览
      */
-    XLS((byte) 2, "xls"),
+    /*---------------------------------------------------------------------------- */
+    ERROR((short) -1, "error"),
+    UNKNOW((short) 0, "unknow"),
+
+    /*--------------- [1 - 200]  -->  支持转为pdf进行在线预览 ------------------------ */
+    XLS((short) 1, "xls"),
+    XLSX((short) 2, "xlsx"),
+    DOC((short) 3, "doc"),
+    DOCX((short) 4, "docx"),
+    PPT((short) 5, "ppt"),
+    PPTX((short) 6, "pptx"),
+    TEXT((short) 7,"txt"),
+    ODT((short) 8, "odt"),
+    OTT((short) 9, "ott"),
+    SXW((short) 10, "sxw"),
+    RTF((short) 11, "rtf"),
+    WPD((short) 12, "wpd"),
+    SXI((short) 13, "xsi"),
+    ODS((short) 14, "ods"),
+    OTS((short) 15, "ots"),
+    SXC((short) 16, "sxc"),
+    CSV((short) 17, "csv"),
+    TSV((short) 18, "tsv"),
+    ODP((short) 19, "odp"),
+    OTP((short) 20, "otp"),
+
+    /*---------------- [201 - 400]  -->  支持返回源文件流，进行在线预览 --------------------- */
+    PDF((short) 201, "pdf"),
+    HTML((short) 202, "html"),
+    // 图像文件
+    PNG((short) 203, "png"),
+    JPEG((short) 204, "jpeg"),
+    JPG((short) 205, "jpg"),
+    // 程序文件
+    PY((short) 211, "py"),
+    JAVA((short) 212, "java"),
+    CPP((short) 213, "cpp"),
+    C((short) 214, "c"),
+    XML((short) 215, "xml"),
+    PHP((short) 216, "php"),
+    JS((short) 217, "js"),
+    JSON((short) 218, "json"),
+    CSS((short) 219, "css"),
+    // 视频文件
+    MP4((short) 220, "mp4"),
+    AVI((short) 221, "avi"),
+    MOV((short) 222, "mov"),
+
+
+    /*---------------- [401 - 600]  -->  使用kkfileview提供在线预览----------------------- */
+    XMIND((short) 401, "xmind"),
+    BPMN((short) 402, "bpmn"),
+    EML((short) 403, "eml"),
+    EPUB((short) 404, "epub"),
+    OBJ((short) 405, "obj"),
+    SSS_3DS((short) 406, "3ds"),
+    STL((short) 407, "stl"),
+    PLY((short) 408, "ply"),
+    GLTF((short) 409, "gltf"),
+    GLB((short) 410, "glb"),
+    OFF((short) 411, "off"),
+    SSS_3DM((short) 412, "3dm"),
+    FBX((short) 413, "fbx"),
+    DAE((short) 414, "dae"),
+    WRL((short) 415, "wrl"),
+    SSS_3MF((short) 416, "3mf"),
+    IFC((short) 417, "ifc"),
+    BREP((short) 418, "brep"),
+    STEP((short) 419, "step"),
+    IGES((short) 420, "iges"),
+    FCSTD((short) 421, "fcstd"),
+    BIM((short) 422, "bim"),
+    DWG((short) 423, "dwg"),
+    DXF((short) 424, "dxf"),
+    MD((short) 425, "md"),
+    TIF((short) 426, "tif"),
+    TIFF((short) 427, "tiff"),
+    TGA((short) 428, "tga"),
+    SVG((short) 429, "svg"),
+    ZIP((short) 430, "zip"),
+    RAR((short) 431, "rar"),
+    JAR((short) 432, "jar"),
+    TAR((short) 433, "tar"),
+    GZIP((short) 434, "gzip"),
+    SSS_7Z((short) 435, "7z"),
+
+
+
+    /*---------------- [601 - 1000]  -->  不支持在线预览--------------------------------- */
+    DLL((short) 601, "dll"),
+    EXE((short) 1000, "exe");
+
+
+
 
     /**
-     * xlsx
+     * 文件类型码
      */
-    XLSX((byte) 3, "xlsx"),
-
+    private final short code;
     /**
-     * doc
+     * 文件后缀
      */
-    DOC((byte) 4, "doc"),
-
-    /**
-     * docx
-     */
-    DOCX((byte) 5, "docx"),
-
-    /**
-     * ppt
-     */
-    PPT((byte) 6, "ppt"),
-
-    /**
-     * pptx
-     */
-    PPTX((byte) 7, "pptx"),
-
-    /**
-     * markdown
-     */
-    MD((byte) 8, "markdown"),
-
-    /**
-     * png
-     */
-    PNG((byte) 9, "png"),
-
-    /**
-     * jpeg
-     */
-    JPEG((byte) 10, "jpeg"),
-
-    /**
-     * jpg
-     */
-    JPG((byte) 11, "jpg"),
-
-    /**
-     * txt
-     */
-    TEXT((byte) 12,"txt");
+    private final String suffix;
 
 
-    /**
-     * 文档类型码
-     */
-    private final Byte code;
-    /**
-     * 文档类型
-     */
-    private final String fileType;
-
-    FileTypeEnum(Byte code, String fileType) {
+    FileTypeEnum(short code, String suffix) {
         this.code = code;
-        this.fileType = fileType;
+        this.suffix = suffix;
     }
-
-    /**
-     * @MethodName getCodeByFileType
-     * @Description 根据文档类型获取文档枚举类型码
-     * @Author travis-wei
-     * @Data 2023/4/11
-     * @param fileType
-     * @Return java.lang.Integer  0:该文档类型未知
-     **/
-    public static Byte getCodeByFileType(String fileType) {
-        for (FileTypeEnum value : FileTypeEnum.values()) {
-            if (value.getFileType().equals(fileType)) return value.getCode();
-        }
-        return 0;
-    }
-
-    /**
-     * @MethodName getFileTypeByCode
-     * @Description 根据文档枚举类型码获取文档类型
-     * @Author travis-wei
-     * @Data 2023/4/11
-     * @param code
-     * @Return java.lang.String null-该类型码不存在
-     **/
-    public static String getFileTypeByCode(Integer code) {
-        for (FileTypeEnum value : FileTypeEnum.values()) {
-            if (value.getCode().equals(code)) return value.getFileType();
-        }
-        return null;
-    }
-
-
-    /**
-     * @MethodName judgeSupportType
-     * @Description 判断文件的类型是否是支持预览的类型
-     * @Author travis-wei
-     * @Data 2023/4/11
-     * @param suffix
-     * @Return boolean
-     **/
-    public static boolean judgeSupportType(String suffix) {
-        for (FileTypeEnum value : FileTypeEnum.values()) {
-            if (suffix.equals(value.getFileType())) return true;
-        }
-        return false;
-    }
-
 }

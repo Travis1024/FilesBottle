@@ -11,6 +11,15 @@ server:
     context-path: /api/document
 
 
+--- # jodconverter配置
+office:
+  converter:
+    office-home: /Applications/LibreOffice.app/Contents
+    max-tasks-per-process: 100
+    port-numbers: 8888
+
+
+
 --- # 修改上传文件大小的限制
 spring:
   servlet:
@@ -23,6 +32,10 @@ spring:
 spring:
   elasticsearch:
     uris: 140.246.171.8:9200
+    # 设置连接超时时间为30s,单位是毫秒
+    connection-timeout: 30000
+    # 设置socket超时时间为60s，单位是毫秒
+    socket-timeout: 60000
 
 
 --- # 配置mongodb信息

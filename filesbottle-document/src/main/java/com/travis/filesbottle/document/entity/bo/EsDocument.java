@@ -10,7 +10,7 @@ import java.io.Serializable;
 
 /**
  * @ClassName EsDocument
- * @Description TODO
+ * @Description ElasticSearch存储的信息实体
  * @Author travis-wei
  * @Version v1.0
  * @Data 2023/4/13

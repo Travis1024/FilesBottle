@@ -12,8 +12,11 @@ server:
 
 
 --- # jodconverter配置
-jodconverter:
-
+office:
+  converter:
+    office-home: /Applications/LibreOffice.app/Contents
+    max-tasks-per-process: 100
+    port-numbers: 8888
 
 
 
@@ -29,6 +32,10 @@ spring:
 spring:
   elasticsearch:
     uris: 140.246.171.8:9200
+    # 设置连接超时时间为30s,单位是毫秒
+    connection-timeout: 30000
+    # 设置socket超时时间为60s，单位是毫秒
+    socket-timeout: 60000
 
 
 --- # 配置mongodb信息

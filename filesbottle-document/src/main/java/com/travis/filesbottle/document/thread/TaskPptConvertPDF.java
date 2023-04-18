@@ -4,8 +4,6 @@ import cn.hutool.core.util.IdUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.itextpdf.text.Document;
-import com.itextpdf.text.PageSize;
-import com.itextpdf.text.Rectangle;
 import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
@@ -27,21 +25,20 @@ import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.awt.*;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.List;
 
 /**
  * @ClassName TaskPptConvertPDF
- * @Description TODO
+ * @Description 将ppt文件转换成pdf文件（已弃用）
  * @Author travis-wei
  * @Version v1.0
  * @Data 2023/4/12
  */
+@Deprecated
 @Slf4j
-public class TaskPptConvertPDF implements Runnable, TaskFileConvertPDF{
+public class TaskPptConvertPDF implements Runnable, TaskConvertService {
 
     private FileDocument fileDocument;
     private InputStream fileInputStream;
@@ -263,7 +260,7 @@ public class TaskPptConvertPDF implements Runnable, TaskFileConvertPDF{
         esDocument.setPreviewId(fileDocument.getDocPreviewId());
         esDocument.setFileName(fileDocument.getDocName());
         esDocument.setFileDescription(fileDocument.getDocDescription());
-        // TODO 内容的elasticSearch最后做
+        // 内容的elasticSearch最后做，弃用
         // esDocument.setFileText();
 
         IndexRequest indexRequest = new IndexRequest(DocumentConstants.ES_DOCUMENT_NAME);

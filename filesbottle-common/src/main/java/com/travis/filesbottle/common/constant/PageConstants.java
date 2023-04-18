@@ -2,7 +2,7 @@ package com.travis.filesbottle.common.constant;
 
 /**
  * @ClassName PageConstants
- * @Description TODO
+ * @Description 定义page常量
  * @Author travis-wei
  * @Version v1.0
  * @Data 2023/4/11

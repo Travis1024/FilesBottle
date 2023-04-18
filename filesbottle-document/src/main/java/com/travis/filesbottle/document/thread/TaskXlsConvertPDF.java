@@ -7,13 +7,14 @@ import java.io.InputStream;
 
 /**
  * @ClassName TaskXlsConvertPDF
- * @Description TODO
+ * @Description 异步执行将xls文件转换成pdf文件（已弃用）
  * @Author travis-wei
  * @Version v1.0
  * @Data 2023/4/12
  */
+@Deprecated
 @Slf4j
-public class TaskXlsConvertPDF implements Runnable, TaskFileConvertPDF{
+public class TaskXlsConvertPDF implements Runnable, TaskConvertService {
 
     private FileDocument fileDocument;
     private InputStream fileInputStream;

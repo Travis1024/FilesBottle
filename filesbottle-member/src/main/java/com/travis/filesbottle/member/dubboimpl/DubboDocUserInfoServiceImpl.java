@@ -11,7 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @ClassName DubboDocUserInfoServiceImpl
- * @Description TODO
+ * @Description Dubbo查询用户基本信息服务实现类
  * @Author travis-wei
  * @Version v1.0
  * @Data 2023/4/11

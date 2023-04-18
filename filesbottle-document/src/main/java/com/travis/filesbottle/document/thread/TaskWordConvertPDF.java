@@ -46,13 +46,14 @@ import java.nio.charset.StandardCharsets;
 
 /**
  * @ClassName TaskWordConvertPDF
- * @Description TODO
+ * @Description 异步执行将word文件转换成pdf文件（已弃用）
  * @Author travis-wei
  * @Version v1.0
  * @Data 2023/4/12
  */
+@Deprecated
 @Slf4j
-public class TaskWordConvertPDF implements Runnable, TaskFileConvertPDF{
+public class TaskWordConvertPDF implements Runnable, TaskConvertService {
 
     private FileDocument fileDocument;
     private InputStream fileInputStream;
@@ -256,7 +257,7 @@ public class TaskWordConvertPDF implements Runnable, TaskFileConvertPDF{
         esDocument.setPreviewId(fileDocument.getDocPreviewId());
         esDocument.setFileName(fileDocument.getDocName());
         esDocument.setFileDescription(fileDocument.getDocDescription());
-        // TODO 内容的elasticSearch最后做
+        // 内容的elasticSearch最后做，弃用
         // esDocument.setFileText();
 
         IndexRequest indexRequest = new IndexRequest(DocumentConstants.ES_DOCUMENT_NAME);

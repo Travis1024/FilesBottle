@@ -55,8 +55,8 @@ public class FileDocument extends Model<FileDocument> {
     private String docContentTypeText;
 
     @ApiModelProperty("文档类型码")
-    @TableField("doc_content_type")
-    private Byte docContentType;
+    @TableField("doc_file_type_code")
+    private Short docFileTypeCode;
 
     @ApiModelProperty("文档后缀")
     @TableField("doc_suffix")
@@ -112,7 +112,9 @@ public class FileDocument extends Model<FileDocument> {
 
     public static final String DOC_MD5 = "doc_md5";
 
-    public static final String DOC_CONTENT_TYPE = "doc_content_type";
+    public static final String DOC_CONTENT_TYPE_TEXT = "doc_content_type_text";
+
+    public static final String DOC_FILE_TYPE_CODE = "doc_file_type_code";
 
     public static final String DOC_SUFFIX = "doc_suffix";
 

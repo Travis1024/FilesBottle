@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * @ClassName ApplicationContextUtil
- * @Description TODO
+ * @Description ApplicationContext工具类，为异步执行的其他线程提供获取bean的方法
  * @Author travis-wei
  * @Version v1.0
  * @Data 2023/4/14

@@ -5,7 +5,6 @@ import cn.hutool.crypto.SecureUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.travis.filesbottle.common.constant.Constants;
-import com.travis.filesbottle.common.constant.DocumentConstants;
 import com.travis.filesbottle.common.constant.PageConstants;
 import com.travis.filesbottle.common.enums.BizCodeEnum;
 import com.travis.filesbottle.common.utils.BizCodeUtil;
@@ -14,6 +13,7 @@ import com.travis.filesbottle.document.entity.FileDocument;
 import com.travis.filesbottle.document.entity.dto.DownloadDocument;
 import com.travis.filesbottle.document.service.DocumentService;
 import com.travis.filesbottle.document.service.TaskExecuteService;
+import com.travis.filesbottle.document.utils.FileTypeEnumUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -81,23 +81,23 @@ public class DocumentsController {
         return R.success(documentList);
     }
 
-    @ApiOperation(value = "获取预览文件(PDF)流，主要为可以转换成pdf的文件提供预览")
+//    @ApiOperation(value = "获取预览文件(PDF)流，主要为可以转换成pdf的文件提供预览")
+//    @GetMapping("/stream/preview")
+//    public R<?> getPreviewDocStream(@RequestParam("sourceId") String sourceId) throws UnsupportedEncodingException {
+//
+//        R<?> previewDocStream = documentService.getPreviewDocStream(sourceId);
+//        if (!BizCodeUtil.isCodeSuccess(previewDocStream.getCode())) {
+//            // 返回失败的响应结果
+//            return previewDocStream;
+//        }
+//        DownloadDocument data = (DownloadDocument) previewDocStream.getData();
+//
+//        return R.success("预览文件：pdf流获取成功！", data);
+//    }
+
+    @ApiOperation(value = "获取预览文件，可能 不支持在线预览｜pdf在线预览｜源文件在线预览｜kkFileView的url在线预览")
     @GetMapping("/stream/preview")
-    public R<?> getPreviewDocStream(@RequestParam("sourceId") String sourceId) throws UnsupportedEncodingException {
-
-        R<?> previewDocStream = documentService.getPreviewDocStream(sourceId);
-        if (!BizCodeUtil.isCodeSuccess(previewDocStream.getCode())) {
-            // 返回失败的响应结果
-            return previewDocStream;
-        }
-        DownloadDocument data = (DownloadDocument) previewDocStream.getData();
-
-        return R.success("预览文件：pdf流获取成功！", data);
-    }
-
-    @ApiOperation(value = "获取源文件流，主要为源文件类型为pdf、图片的提供预览")
-    @GetMapping("/stream/source")
-    public R<?> getSourceDocStream(@RequestParam("sourceId") String sourceId) throws UnsupportedEncodingException {
+    public R<?> getPreviewStream(@RequestParam("sourceId") String sourceId) throws UnsupportedEncodingException {
 
         R<?> sourceDocStream = documentService.getSourceDocStream(sourceId);
         if (!BizCodeUtil.isCodeSuccess(sourceDocStream.getCode())) {
@@ -106,7 +106,7 @@ public class DocumentsController {
         }
         DownloadDocument data = (DownloadDocument) sourceDocStream.getData();
 
-        return R.success("源文件：流获取成功！", data);
+        return R.success("预览文件获取成功！", data);
     }
 
 
@@ -158,11 +158,8 @@ public class DocumentsController {
                 return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.BAD_REQUEST, "团队文件库中已存在该文件！");
             }
 
-            // 如果文件类型为已知的支持文件预览的类型
-            if (!fileDocument.getDocContentType().equals((byte) 0)) {
-                // 异步执行生成预览文件、更新mysql数据、更新elasticSearch数据
-                taskExecuteService.generatePreviewFile(fileDocument, file.getInputStream());
-            }
+            // 异步执行生成预览文件、更新mysql数据、更新elasticSearch数据的任务
+            taskExecuteService.generatePreviewFile(fileDocument, file.getInputStream());
 
         } catch (IOException exception) {
             log.error(exception.getMessage());

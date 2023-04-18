@@ -2,7 +2,7 @@ package com.travis.filesbottle.common.dubboservice.document;
 
 /**
  * @ClassName DubboDocUpdateDataService
- * @Description TODO
+ * @Description Dubbo更新文档数据信息服务接口
  * @Author travis-wei
  * @Version v1.0
  * @Data 2023/4/12

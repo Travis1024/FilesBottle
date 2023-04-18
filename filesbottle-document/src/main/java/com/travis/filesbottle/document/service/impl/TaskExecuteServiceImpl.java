@@ -1,14 +1,12 @@
 package com.travis.filesbottle.document.service.impl;
 
-import cn.hutool.core.util.IdUtil;
-import com.travis.filesbottle.common.constant.DocumentConstants;
 import com.travis.filesbottle.document.entity.FileDocument;
 import com.travis.filesbottle.document.enums.FileTypeEnum;
 import com.travis.filesbottle.document.service.TaskExecuteService;
 import com.travis.filesbottle.document.thread.*;
 import lombok.extern.slf4j.Slf4j;
+import org.jodconverter.core.DocumentConverter;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.stereotype.Service;
 
 import java.io.InputStream;
@@ -28,6 +26,9 @@ public class TaskExecuteServiceImpl implements TaskExecuteService {
     @Autowired
     private ThreadPoolExecutor threadPoolExecutor;
 
+    @Autowired
+    public DocumentConverter documentConverter;
+
 
     /**
      * @MethodName generatePreviewFile
@@ -39,18 +40,20 @@ public class TaskExecuteServiceImpl implements TaskExecuteService {
      **/
     @Override
     public void generatePreviewFile(FileDocument fileDocument, InputStream inputStream) {
-        TaskFileConvertPDF taskFileConvertPDF;
-        Byte type = fileDocument.getDocContentType();
-        if (type.equals(FileTypeEnum.DOC.getCode()) || type.equals(FileTypeEnum.DOCX.getCode())) {
-            taskFileConvertPDF = new TaskWordConvertPDF(fileDocument, inputStream);
-        } else if (type.equals(FileTypeEnum.PPT.getCode()) || type.equals(FileTypeEnum.PPTX.getCode())) {
-            taskFileConvertPDF = new TaskPptConvertPDF(fileDocument, inputStream);
-        } else if (type.equals(FileTypeEnum.XLS.getCode()) || type.equals(FileTypeEnum.XLSX.getCode())) {
-            taskFileConvertPDF = new TaskXlsConvertPDF(fileDocument, inputStream);
+
+        TaskConvertService taskConvertService;
+
+        // 获取文件类型码
+        Short type = fileDocument.getDocFileTypeCode();
+        // 根据文件类型码判断需要执行的异步任务
+        if (type >= 1 && type <= 200) {
+            taskConvertService = new TaskFileConvertPdfServiceImpl(fileDocument, inputStream);
+        } else if (type >= 401 && type <= 600){
+            taskConvertService = new TaskKKFileViewConvertServiceImpl(fileDocument, inputStream);
         } else {
-            taskFileConvertPDF = new TaskNoNeedConvertPDF(fileDocument, inputStream);
+            taskConvertService = new TaskNoNeedConvertServiceImpl(fileDocument, inputStream);
         }
 
-        threadPoolExecutor.execute(taskFileConvertPDF);
+        threadPoolExecutor.execute(taskConvertService);
     }
 }

@@ -77,6 +77,9 @@ public enum BizCodeEnum {
     TOKEN_EXPIRED(902, "token 已过期"),
     TOKEN_REFRESH(903, "token 可以刷新"),
     TOKEN_MISSION(904, "token 缺失"),
+
+    FILE_NOT_SUPPORT_PREVIEW(905, "该文件类型不支持在线预览！"),
+
     UNKNOW(999, "未知错误");
 
 

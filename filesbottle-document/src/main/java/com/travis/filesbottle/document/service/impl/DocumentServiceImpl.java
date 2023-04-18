@@ -17,10 +17,10 @@ import com.travis.filesbottle.common.utils.BizCodeUtil;
 import com.travis.filesbottle.common.utils.R;
 import com.travis.filesbottle.document.entity.FileDocument;
 import com.travis.filesbottle.document.entity.dto.DownloadDocument;
-import com.travis.filesbottle.document.enums.FileTypeEnum;
 import com.travis.filesbottle.document.mapper.DocumentMapper;
 import com.travis.filesbottle.document.service.DocumentService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.travis.filesbottle.document.utils.FileTypeEnumUtil;
 import io.seata.spring.annotation.GlobalTransactional;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -118,7 +118,8 @@ public class DocumentServiceImpl extends ServiceImpl<DocumentMapper, FileDocumen
         fileDocument.setDocSize(docSize);
         fileDocument.setDocUploadDate(new Timestamp(new Date().getTime()));
         fileDocument.setDocMd5(fileMd5);
-        fileDocument.setDocContentType(FileTypeEnum.getCodeByFileType(suffix));
+        // 根据文件后缀获取文件的类型码
+        fileDocument.setDocFileTypeCode(FileTypeEnumUtil.getCodeBySuffix(suffix));
         fileDocument.setDocSuffix(suffix);
         fileDocument.setDocDescription(description);
         fileDocument.setDocContentTypeText(file.getContentType());
@@ -233,43 +234,44 @@ public class DocumentServiceImpl extends ServiceImpl<DocumentMapper, FileDocumen
     }
 
 
-    /**
-     * @MethodName getPreviewDocStream
-     * @Description 通过sourceId获取预览文件的字节流
-     * @Author travis-wei
-     * @Data 2023/4/14
-     * @param sourceId
-     * @Return com.travis.filesbottle.common.utils.R<?>
-     **/
-    @Override
-    public R<?> getPreviewDocStream(String sourceId) {
-        FileDocument fileDocument = getFileDocumentBySourceId(sourceId);
-        if (fileDocument == null) {
-            return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.BAD_REQUEST, "无法找到该文件！");
-        }
-        // 查找源文件ID对应的预览文件ID
-        String previewId = fileDocument.getDocPreviewId();
-        if (StrUtil.isEmpty(previewId)) {
-            return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.BAD_REQUEST, "无法找到该文件的预览文件，不支持在线预览！");
-        }
-
-        R<byte[]> bytesById = getDocumentBytesById(previewId);
-        if (!BizCodeUtil.isCodeSuccess(bytesById.getCode())) {
-            return bytesById;
-        }
-        DownloadDocument downloadDocument = new DownloadDocument();
-
-        downloadDocument.setDocName(fileDocument.getDocName());
-        downloadDocument.setDocSize(fileDocument.getDocSize());
-        downloadDocument.setDocDescription(fileDocument.getDocDescription());
-        downloadDocument.setDocSuffix(fileDocument.getDocSuffix());
-        downloadDocument.setDocGridfsId(fileDocument.getDocGridfsId());
-        downloadDocument.setDocContentTypeText(fileDocument.getDocContentTypeText());
-        downloadDocument.setDocPreviewId(fileDocument.getDocPreviewId());
-        downloadDocument.setBytes(bytesById.getData());
-
-        return R.success(downloadDocument);
-    }
+//    /**
+//     * @MethodName getPreviewDocStream
+//     * @Description 通过sourceId获取预览文件的字节流
+//     * @Author travis-wei
+//     * @Data 2023/4/14
+//     * @param sourceId
+//     * @Return com.travis.filesbottle.common.utils.R<?>
+//     **/
+//    @Override
+//    public R<?> getPreviewDocStream(String sourceId) {
+//        FileDocument fileDocument = getFileDocumentBySourceId(sourceId);
+//        if (fileDocument == null) {
+//            return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.BAD_REQUEST, "无法找到该文件！");
+//        }
+//        // 查找源文件ID对应的预览文件ID
+//        String previewId = fileDocument.getDocPreviewId();
+//        if (StrUtil.isEmpty(previewId)) {
+//            return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.BAD_REQUEST, "无法找到该文件的预览文件，不支持在线预览！");
+//        }
+//
+//        R<byte[]> bytesById = getDocumentBytesById(previewId);
+//        if (!BizCodeUtil.isCodeSuccess(bytesById.getCode())) {
+//            return bytesById;
+//        }
+//        DownloadDocument downloadDocument = new DownloadDocument();
+//
+//        downloadDocument.setDocName(fileDocument.getDocName());
+//        downloadDocument.setDocSize(fileDocument.getDocSize());
+//        downloadDocument.setDocDescription(fileDocument.getDocDescription());
+//        downloadDocument.setDocSuffix(fileDocument.getDocSuffix());
+//        downloadDocument.setDocGridfsId(fileDocument.getDocGridfsId());
+//        downloadDocument.setDocContentTypeText(fileDocument.getDocContentTypeText());
+//        downloadDocument.setDocPreviewId(fileDocument.getDocPreviewId());
+//        downloadDocument.setBytes(bytesById.getData());
+//        downloadDocument.setDocFileTypeCode(fileDocument.getDocFileTypeCode());
+//
+//        return R.success(downloadDocument);
+//    }
 
     /**
      * @MethodName getSourceDocStream
@@ -281,16 +283,36 @@ public class DocumentServiceImpl extends ServiceImpl<DocumentMapper, FileDocumen
      **/
     @Override
     public R<?> getSourceDocStream(String sourceId) {
-        R<byte[]> bytesById = getDocumentBytesById(sourceId);
-        if (!BizCodeUtil.isCodeSuccess(bytesById.getCode())) {
-            return bytesById;
+//        R<byte[]> bytesById = getDocumentBytesById(sourceId);
+//        if (!BizCodeUtil.isCodeSuccess(bytesById.getCode())) {
+//            return bytesById;
+//        }
+
+        // 一、首先查找该源文件信息是否存在
+        FileDocument fileDocument = getFileDocumentBySourceId(sourceId);
+        if (fileDocument == null) {
+            return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.BAD_REQUEST, "无法找到该文件！");
+        }
+        // 二、判断该源文件的类型是否支持在线预览，如果不支持在线预览，返回状态码 18905（document模块 + 不支持预览）
+        Short typeCode = fileDocument.getDocFileTypeCode();
+        if (typeCode == null || typeCode == 0 || typeCode == -1 || (typeCode >= 601 && typeCode <= 1000)) {
+            return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.FILE_NOT_SUPPORT_PREVIEW);
         }
 
-        FileDocument fileDocument = getFileDocumentBySourceId(sourceId);
-        DownloadDocument downloadDocument = new DownloadDocument();
-        if (fileDocument == null) {
-            R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.BAD_REQUEST, "无法找到该文件！");
+        // 三、分别处理支持预览的文件信息
+        if (typeCode >= 1 && typeCode <= 200) {
+            // 支持转为pdf文件进行在线预览
+
+        } else if (typeCode >= 201 && typeCode <= 400) {
+            // 支持返回源文件流，进行在线预览
+
+        } else if (typeCode >= 401 && typeCode <= 600) {
+            // 支持使用kkFileView进行在线预览
+
         }
+
+        DownloadDocument downloadDocument = new DownloadDocument();
+
         downloadDocument.setDocName(fileDocument.getDocName());
         downloadDocument.setDocSize(fileDocument.getDocSize());
         downloadDocument.setDocDescription(fileDocument.getDocDescription());
@@ -299,6 +321,7 @@ public class DocumentServiceImpl extends ServiceImpl<DocumentMapper, FileDocumen
         downloadDocument.setDocContentTypeText(fileDocument.getDocContentTypeText());
         downloadDocument.setDocPreviewId(fileDocument.getDocPreviewId());
         downloadDocument.setBytes(bytesById.getData());
+        downloadDocument.setDocFileTypeCode(fileDocument.getDocFileTypeCode());
 
         return R.success(downloadDocument);
 

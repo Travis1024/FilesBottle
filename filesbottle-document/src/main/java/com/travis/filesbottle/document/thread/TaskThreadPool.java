@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * @ClassName TaskThreadPool
- * @Description TODO
+ * @Description 异步任务线程池配置
  * @Author travis-wei
  * @Version v1.0
  * @Data 2023/4/12

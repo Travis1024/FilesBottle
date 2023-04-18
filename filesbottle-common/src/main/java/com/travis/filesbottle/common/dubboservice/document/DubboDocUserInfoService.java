@@ -4,7 +4,7 @@ import com.travis.filesbottle.common.dubboservice.document.bo.DubboDocumentUser;
 
 /**
  * @ClassName DubboDocUserInfoService
- * @Description TODO
+ * @Description Dubbo查询用户基本信息服务接口
  * @Author travis-wei
  * @Version v1.0
  * @Data 2023/4/11

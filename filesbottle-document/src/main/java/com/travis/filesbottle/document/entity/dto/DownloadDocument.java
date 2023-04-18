@@ -8,7 +8,7 @@ import java.io.Serializable;
 
 /**
  * @ClassName DownloadDocument
- * @Description TODO
+ * @Description 文档下载信息及预览流数据信息
  * @Author travis-wei
  * @Version v1.0
  * @Data 2023/4/14
@@ -34,6 +34,9 @@ public class DownloadDocument implements Serializable {
     @ApiModelProperty("文档后缀")
     private String docSuffix;
 
+    @ApiModelProperty("文件类型码")
+    private Short docFileTypeCode;
+
     @ApiModelProperty("文档描述")
     private String docDescription;
 
@@ -42,5 +45,8 @@ public class DownloadDocument implements Serializable {
 
     @ApiModelProperty("文件流数据")
     private StreamingResponseBody streamingResponseBody;
+
+    @ApiModelProperty("kkFileView文件预览URL")
+    private String previewUrl;
 
 }
