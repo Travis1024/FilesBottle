@@ -14,7 +14,7 @@ import java.io.InputStream;
  */
 public interface TaskConvertService extends Runnable {
 
-    public InputStream convertFile() throws OfficeException;
+    public InputStream convertFile() throws Exception;
 
     public void updateMysqlData(String previewId);
 

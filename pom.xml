@@ -67,6 +67,7 @@
         <jodconverter.version>4.4.6</jodconverter.version>
         <libreoffice.version>7.5.1</libreoffice.version>
         <markdown2pdf.version>2.0.1</markdown2pdf.version>
+        <spring.mock.version>2.0.8</spring.mock.version>
 
     </properties>
 
@@ -372,6 +373,12 @@
                 <groupId>org.libreoffice</groupId>
                 <artifactId>ridl</artifactId>
                 <version>${libreoffice.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-mock</artifactId>
+                <version>${spring.mock.version}</version>
             </dependency>
 
         </dependencies>

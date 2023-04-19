@@ -59,9 +59,9 @@ public class TaskPptConvertPDF implements Runnable, TaskConvertService {
     @Override
     public InputStream convertFile() {
         InputStream inputStream = null;
-        if (fileDocument.getDocContentType().equals(FileTypeEnum.PPT.getCode())) {
+        if (fileDocument.getDocFileTypeCode().equals(FileTypeEnum.PPT.getCode())) {
             inputStream = pptToPdf(fileInputStream);
-        } else if (fileDocument.getDocContentType().equals(FileTypeEnum.PPTX.getCode())) {
+        } else if (fileDocument.getDocFileTypeCode().equals(FileTypeEnum.PPTX.getCode())) {
             inputStream = pptxToPdf(fileInputStream);
         }
         return inputStream;

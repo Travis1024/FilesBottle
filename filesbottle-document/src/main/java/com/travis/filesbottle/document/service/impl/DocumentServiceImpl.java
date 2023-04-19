@@ -1,8 +1,10 @@
 package com.travis.filesbottle.document.service.impl;
 
+import cn.hutool.core.codec.Base64;
 import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.mongodb.client.gridfs.GridFSBucket;
@@ -22,13 +24,21 @@ import com.travis.filesbottle.document.service.DocumentService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.travis.filesbottle.document.utils.FileTypeEnumUtil;
 import io.seata.spring.annotation.GlobalTransactional;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.config.annotation.DubboReference;
+import org.elasticsearch.action.delete.DeleteRequest;
+import org.elasticsearch.action.delete.DeleteResponse;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.gridfs.GridFsResource;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
@@ -48,9 +58,25 @@ import java.util.List;
  * @since 2023-04-11
  */
 @Service
+@Slf4j
 public class DocumentServiceImpl extends ServiceImpl<DocumentMapper, FileDocument> implements DocumentService {
 
+    @Value("${kkfileview.preview.urlprefix}")
+    private String kkFilePreviewPrefixUrl;
+    @Value("${kkfileview.file.urlprefix}")
+    private String kkFileFilePrefixUrl;
+    @Value("${kkfileview.delete.urlprefix}")
+    private String kkFileDeletePrefixUrl;
+    @Value("${kkfileview.delete.password}")
+    private String kkFileDeletePassword;
+
     private static final String FILE_NAME = "filename";
+
+    @Autowired
+    private RestTemplate restTemplate;
+
+    @Autowired
+    private RestHighLevelClient restHighLevelClient;
 
     @Autowired
     private DocumentMapper documentMapper;
@@ -110,6 +136,8 @@ public class DocumentServiceImpl extends ServiceImpl<DocumentMapper, FileDocumen
         String originalFilename = file.getOriginalFilename();
         // 获取文件名的后缀
         String suffix = originalFilename.substring(originalFilename.lastIndexOf(".") + 1);
+        // 将文件后缀都转为小写
+        suffix = suffix.toLowerCase();
         fileDocument = new FileDocument();
 
         fileDocument.setDocName(originalFilename);
@@ -296,9 +324,25 @@ public class DocumentServiceImpl extends ServiceImpl<DocumentMapper, FileDocumen
             downloadDocument.setDocDescription(fileDocument.getDocDescription());
             // TODO 判断这样做是否合理，如果一直请求该url就可能导致kkFileView服务宕机，考虑通过后端请求预览文件的URL，可以做限流
             // 获取kkFileView提供的预览文档的url
-            downloadDocument.setPreviewUrl(fileDocument.getDocPreviewUrl());
+            downloadDocument.setPreviewUrl(getKkFilePreviewUrl(fileDocument.getDocGridfsId(), fileDocument));
         }
         return R.success(downloadDocument);
+    }
+
+    /**
+     * @MethodName getKkFilePreviewUrl
+     * @Description 通过源文件ID获取kkFileView在线预览文件的URL
+     * @Author travis-wei
+     * @Data 2023/4/19
+     * @param gridFsId
+     * @Return java.lang.String
+     **/
+    private String getKkFilePreviewUrl(String gridFsId, FileDocument fileDocument) {
+        // 预览文件路径
+        String tempUrl = kkFileFilePrefixUrl + fileDocument.getDocGridfsId() + "." + fileDocument.getDocSuffix();
+        // 对预览文件路径进行base64编码
+        tempUrl = Base64.encode(tempUrl);
+        return kkFilePreviewPrefixUrl + "?url=" + tempUrl;
     }
 
     /**
@@ -337,6 +381,145 @@ public class DocumentServiceImpl extends ServiceImpl<DocumentMapper, FileDocumen
 
         return R.success(downloadDocument);
     }
+
+    @Override
+    public R<?> deleteDocumentById(String sourceId) {
+        // 一、首先查询文件记录是否存在
+        FileDocument fileDocument = getFileDocumentBySourceId(sourceId);
+        if (fileDocument == null) {
+            return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.BAD_REQUEST, "文件记录不存在，文件删除失败！");
+        }
+        // 二、获取文件类型码，根据文件类型码进行分步处理
+        Short typeCode = fileDocument.getDocFileTypeCode();
+        if (typeCode >= 1 && typeCode <= 200) {
+            // 支持转为pdf进行预览的文件
+            // 2.1.1 删除mongodb源文件
+            R<?> r1 = deleteMongoFileByGridFsId(fileDocument.getDocGridfsId());
+            // 2.1.2 删除mongodb预览文件
+            R<?> r2 = deleteMongoFileByGridFsId(fileDocument.getDocPreviewId());
+            // 2.1.3 删除elasticsearch记录
+            R<?> r3 = deleteEsRecordById(sourceId);
+            // 2.1.4 删除mysql数据
+            R<?> r4 = deleteMysqlRecordById(sourceId);
+            // 2.1.5 判读是否均处理成功
+            if (!BizCodeUtil.isCodeSuccess(r1.getCode()) || !BizCodeUtil.isCodeSuccess(r2.getCode()) || !BizCodeUtil.isCodeSuccess(r3.getCode()) || !BizCodeUtil.isCodeSuccess(r4.getCode())) {
+                return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.UNKNOW, r1.getMessage() + r2.getMessage() + r3.getMessage() + r4.getMessage());
+            }
+        } else if (typeCode >= 401 && typeCode <= 600) {
+            // 支持使用kkFileView进行在线预览的文件
+            // 2.2.1 删除mongo源文件
+            R<?> r1 = deleteMongoFileByGridFsId(sourceId);
+            // 2.2.2 删除kkFileView服务器中的文件
+            R<?> r2 = deleteKkFileById(sourceId, fileDocument.getDocSuffix());
+            // 2.2.3 删除elasticsearch记录
+            R<?> r3 = deleteEsRecordById(sourceId);
+            // 2.2.4 删除mysql数据
+            R<?> r4 = deleteMysqlRecordById(sourceId);
+            // 2.2.5 判读是否均处理成功
+            if (!BizCodeUtil.isCodeSuccess(r1.getCode()) || !BizCodeUtil.isCodeSuccess(r2.getCode()) || !BizCodeUtil.isCodeSuccess(r3.getCode()) || !BizCodeUtil.isCodeSuccess(r4.getCode())) {
+                return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.UNKNOW, r1.getMessage() + r2.getMessage() + r3.getMessage() + r4.getMessage());
+            }
+        } else {
+            // 不支持在线预览的文件 or 源文件流自身可以预览的文件 or 未知类型的文件
+            // 2.3.1 删除mongo源文件
+            R<?> r1 = deleteMongoFileByGridFsId(sourceId);
+            // 2.3.2 删除elasticsearch记录
+            R<?> r2 = deleteEsRecordById(sourceId);
+            // 2.3.3 删除mysql数据
+            R<?> r3 = deleteMysqlRecordById(sourceId);
+            // 2.3.4 判读是否均处理成功
+            if (!BizCodeUtil.isCodeSuccess(r1.getCode()) || !BizCodeUtil.isCodeSuccess(r2.getCode()) || !BizCodeUtil.isCodeSuccess(r3.getCode())) {
+                return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.UNKNOW, r1.getMessage() + r2.getMessage() + r3.getMessage());
+            }
+        }
+
+        return R.success("文件删除成功！");
+    }
+
+
+    /**
+     * @MethodName deleteKkFileById
+     * @Description 发送get请求删除kkFileView服务器中的文件
+     * @Author travis-wei
+     * @Data 2023/4/19
+     * @param sourceId
+     * @param suffix
+     * @Return com.travis.filesbottle.common.utils.R<?>
+     **/
+    private R<?> deleteKkFileById(String sourceId, String suffix) {
+        try {
+            String tempUrl = kkFileFilePrefixUrl + sourceId + "." + suffix;
+            tempUrl = Base64.encode(tempUrl);
+            // 获得完整的字符串
+            String resultUrl = kkFileDeletePrefixUrl + tempUrl + "&password=" + kkFileDeletePassword;
+            // 发送请求，并获取响应信息
+            String forObject = restTemplate.getForObject(resultUrl, String.class);
+            log.info(String.valueOf(forObject));
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            return R.error(BizCodeEnum.UNKNOW, e.getMessage());
+        }
+        return R.success("kkFile文件删除成功！");
+    }
+
+
+    /**
+     * @MethodName deleteMysqlRecordById
+     * @Description 根据源文件ID删除mysql中的FileDocument记录
+     * @Author travis-wei
+     * @Data 2023/4/19
+     * @param sourceId
+     * @Return com.travis.filesbottle.common.utils.R<?>
+     **/
+    private R<?> deleteMysqlRecordById(String sourceId) {
+        QueryWrapper<FileDocument> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq(FileDocument.DOC_GRIDFS_ID, sourceId);
+        int delete = documentMapper.delete(queryWrapper);
+        if (delete > 0) return R.success("Mysql数据记录删除成功！");
+        return R.error(BizCodeEnum.UNKNOW, "Mysql数据删除失败！");
+    }
+
+
+    /**
+     * @MethodName deleteMongoFileByGridFsId
+     * @Description 根据gridFsId删除mongodb中的文件
+     * @Author travis-wei
+     * @Data 2023/4/19
+     * @param gridFsId
+     * @Return boolean
+     **/
+    private R<?> deleteMongoFileByGridFsId(String gridFsId) {
+        try {
+            Query query = new Query().addCriteria(Criteria.where(FILE_NAME).is(gridFsId));
+            gridFsTemplate.delete(query);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            return R.error(BizCodeEnum.UNKNOW, e.getMessage());
+        }
+        return R.success("mongo文件数据删除成功！");
+    }
+
+
+    /**
+     * @MethodName deleteEsRecordById
+     * @Description 根据文档ID删除elasticsearch的记录
+     * @Author travis-wei
+     * @Data 2023/4/19
+     * @param sourceId
+     * @Return void
+     **/
+    private R<?> deleteEsRecordById(String sourceId) {
+        // 创建删除文档的请求，并指定索引和id值
+        DeleteRequest deleteRequest = new DeleteRequest().index("document").id(sourceId);
+        try {
+            DeleteResponse delete = restHighLevelClient.delete(deleteRequest, RequestOptions.DEFAULT);
+            log.info(delete.toString());
+        } catch (IOException e) {
+            log.error(e.getMessage());
+        }
+        return R.success("ElasticSearch数据删除成功！");
+    }
+
 
     /**
      * @MethodName getDocumentBytesById

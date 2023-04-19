@@ -73,9 +73,9 @@ public class TaskWordConvertPDF implements Runnable, TaskConvertService {
     @Override
     public InputStream convertFile() {
         InputStream inputStream = null;
-        if (fileDocument.getDocContentType().equals(FileTypeEnum.DOC.getCode())) {
+        if (fileDocument.getDocFileTypeCode().equals(FileTypeEnum.DOC.getCode())) {
             inputStream = docToPdf(fileInputStream);
-        } else if (fileDocument.getDocContentType().equals(FileTypeEnum.DOCX.getCode())) {
+        } else if (fileDocument.getDocFileTypeCode().equals(FileTypeEnum.DOCX.getCode())) {
             inputStream = docxToPdf(fileInputStream);
         }
         return inputStream;

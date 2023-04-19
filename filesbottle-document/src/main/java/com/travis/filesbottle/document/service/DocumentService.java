@@ -38,4 +38,6 @@ public interface DocumentService extends IService<FileDocument> {
      * @return
      */
     R<?> getSourceDocStream(String sourceId);
+
+    R<?> deleteDocumentById(String sourceId);
 }

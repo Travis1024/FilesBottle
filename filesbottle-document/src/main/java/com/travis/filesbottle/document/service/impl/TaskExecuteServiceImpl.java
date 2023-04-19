@@ -1,13 +1,14 @@
 package com.travis.filesbottle.document.service.impl;
 
 import com.travis.filesbottle.document.entity.FileDocument;
-import com.travis.filesbottle.document.enums.FileTypeEnum;
 import com.travis.filesbottle.document.service.TaskExecuteService;
 import com.travis.filesbottle.document.thread.*;
 import lombok.extern.slf4j.Slf4j;
 import org.jodconverter.core.DocumentConverter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -29,17 +30,24 @@ public class TaskExecuteServiceImpl implements TaskExecuteService {
     @Autowired
     public DocumentConverter documentConverter;
 
+    /**
+     * 从配置文件中获取文件前缀信息
+     */
+    @Value("${kkfileview.project.urlprefix}")
+    private String kkProjectUrlPrefix;
+
 
     /**
+     * @param fileDocument
+     * @param file
      * @MethodName generatePreviewFile
      * @Description 异步处理文件预览、更新mysql数据、更新elasticSearch
      * @Author travis-wei
      * @Data 2023/4/12
-     * @param fileDocument
      * @Return void
      **/
     @Override
-    public void generatePreviewFile(FileDocument fileDocument, InputStream inputStream) {
+    public void generatePreviewFile(FileDocument fileDocument, InputStream inputStream, MultipartFile file) {
 
         TaskConvertService taskConvertService;
 
@@ -49,7 +57,7 @@ public class TaskExecuteServiceImpl implements TaskExecuteService {
         if (type >= 1 && type <= 200) {
             taskConvertService = new TaskFileConvertPdfServiceImpl(fileDocument, inputStream);
         } else if (type >= 401 && type <= 600){
-            taskConvertService = new TaskKKFileViewConvertServiceImpl(fileDocument, inputStream);
+            taskConvertService = new TaskKKFileViewConvertServiceImpl(fileDocument, file, kkProjectUrlPrefix);
         } else {
             taskConvertService = new TaskNoNeedConvertServiceImpl(fileDocument, inputStream);
         }

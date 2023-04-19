@@ -1,6 +1,7 @@
 package com.travis.filesbottle.document.service;
 
 import com.travis.filesbottle.document.entity.FileDocument;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
 
@@ -12,5 +13,5 @@ import java.io.InputStream;
  * @Data 2023/4/12
  */
 public interface TaskExecuteService {
-    void generatePreviewFile(FileDocument fileDocument, InputStream inputStream);
+    void generatePreviewFile(FileDocument fileDocument, InputStream inputStream, MultipartFile file);
 }

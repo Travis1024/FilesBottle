@@ -66,52 +66,56 @@ public enum FileTypeEnum {
     JS((short) 217, "js"),
     JSON((short) 218, "json"),
     CSS((short) 219, "css"),
-    // 视频文件
+    // 视频文件、音频文件
     MP4((short) 220, "mp4"),
     AVI((short) 221, "avi"),
     MOV((short) 222, "mov"),
+    MP3((short) 223, "mp3"),
+    WAV((short) 224, "wav"),
+    FLV((short) 225, "flv"),
 
 
     /*---------------- [401 - 600]  -->  使用kkfileview提供在线预览----------------------- */
-    XMIND((short) 401, "xmind"),
-    BPMN((short) 402, "bpmn"),
-    EML((short) 403, "eml"),
-    EPUB((short) 404, "epub"),
-    OBJ((short) 405, "obj"),
-    SSS_3DS((short) 406, "3ds"),
-    STL((short) 407, "stl"),
-    PLY((short) 408, "ply"),
-    GLTF((short) 409, "gltf"),
-    GLB((short) 410, "glb"),
-    OFF((short) 411, "off"),
-    SSS_3DM((short) 412, "3dm"),
-    FBX((short) 413, "fbx"),
-    DAE((short) 414, "dae"),
-    WRL((short) 415, "wrl"),
-    SSS_3MF((short) 416, "3mf"),
-    IFC((short) 417, "ifc"),
-    BREP((short) 418, "brep"),
-    STEP((short) 419, "step"),
-    IGES((short) 420, "iges"),
-    FCSTD((short) 421, "fcstd"),
-    BIM((short) 422, "bim"),
-    DWG((short) 423, "dwg"),
-    DXF((short) 424, "dxf"),
-    MD((short) 425, "md"),
-    TIF((short) 426, "tif"),
-    TIFF((short) 427, "tiff"),
-    TGA((short) 428, "tga"),
-    SVG((short) 429, "svg"),
-    ZIP((short) 430, "zip"),
-    RAR((short) 431, "rar"),
-    JAR((short) 432, "jar"),
-    TAR((short) 433, "tar"),
-    GZIP((short) 434, "gzip"),
-    SSS_7Z((short) 435, "7z"),
+    XMIND((short) 401, "xmind"),    // 软件模型文件        // y
+    BPMN((short) 402, "bpmn"),      // 工作流文件         // w
+    EML((short) 403, "eml"),        // 邮件文件          // w
+    EPUB((short) 404, "epub"),      // 图书文档          // w
+    OBJ((short) 405, "obj"),        // 3D模型文件        // w
+    SSS_3DS((short) 406, "3ds"),                        // w
+    STL((short) 407, "stl"),                            // w
+    PLY((short) 408, "ply"),                            // w
+    GLTF((short) 409, "gltf"),                          // w
+    GLB((short) 410, "glb"),                            // w
+    OFF((short) 411, "off"),                            // w
+    SSS_3DM((short) 412, "3dm"),                        // w
+    FBX((short) 413, "fbx"),                            // w
+    DAE((short) 414, "dae"),                            // w
+    WRL((short) 415, "wrl"),                            // w
+    SSS_3MF((short) 416, "3mf"),                        // w
+    IFC((short) 417, "ifc"),                            // w
+    BREP((short) 418, "brep"),                          // w
+    STEP((short) 419, "step"),                          // w
+    IGES((short) 420, "iges"),                          // w
+    FCSTD((short) 421, "fcstd"),                        // w
+    BIM((short) 422, "bim"),                            // w
+    DWG((short) 423, "dwg"),        // CAD模型文件        // w
+    DXF((short) 424, "dxf"),        // CAD模型文件        // w
+    MD((short) 425, "md"),          // markdown文本      // y
+    TIF((short) 426, "tif"),        // 图信息模型文件      // w
+    TIFF((short) 427, "tiff"),      // 图信息模型文件      // w
+    TGA((short) 428, "tga"),        // 图像格式文件       // w
+    SVG((short) 429, "svg"),        // 矢量图像格式文件    // w
+    ZIP((short) 430, "zip"),        // 压缩包文件         // w
+    RAR((short) 431, "rar"),                            // w
+    JAR((short) 432, "jar"),                            // w
+    TAR((short) 433, "tar"),                            // w
+    GZIP((short) 434, "gzip"),                          // w
+    SSS_7Z((short) 435, "7z"),                          // w
 
 
     /*---------------- [601 - 1000]  -->  不支持在线预览--------------------------------- */
     DLL((short) 601, "dll"),
+    DAT((short) 602, "dat"),
     EXE((short) 1000, "exe");
 
 
