@@ -18,6 +18,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.checkerframework.checker.units.qual.A;
+import org.elasticsearch.search.SearchHit;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -88,6 +89,21 @@ public class DocumentsController {
         return R.success(documentList);
     }
 
+    @ApiOperation(value = "根据关键词ElasticSearch文档")
+    @GetMapping("/search")
+    public R<?> esDocumentByKeyword(@RequestParam("keyword") String keyword, HttpServletRequest request) {
+        // 从请求头中获取用户id信息
+        String userId = request.getHeader(USER_ID);
+        List<SearchHit> searchHits;
+        try {
+            searchHits = documentService.esDocumentByKeyword(keyword, userId);
+        } catch (IOException e) {
+            log.error(e.getMessage());
+            return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.UNKNOW, e.getMessage());
+        }
+        return R.success(searchHits);
+    }
+
 
     @ApiOperation(value = "获取预览文件，maybe 不支持在线预览｜pdf在线预览｜源文件在线预览｜kkFileView的url在线预览")
     @GetMapping("/stream/preview")
@@ -103,11 +119,10 @@ public class DocumentsController {
 
 
     @ApiOperation(value = "文件删除接口，分三种情况：支持转为pdf进行在线预览 ｜ 支持使用kkFileView在线预览 ｜ 其他（不支持在线预览、源文件流即可预览、未知类型）")
-    @PostMapping("/delete/document")
+    @DeleteMapping("/delete/document")
     public R<?> deleteDocumentById(@RequestParam("sourceId") String sourceId) {
         return documentService.deleteDocumentById(sourceId);
     }
-
 
 
     @ApiOperation(value = "根据源文件ID下载源文件")

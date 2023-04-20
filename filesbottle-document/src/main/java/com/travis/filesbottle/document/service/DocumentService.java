@@ -5,8 +5,10 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.travis.filesbottle.common.utils.R;
 import com.travis.filesbottle.document.entity.FileDocument;
 import com.baomidou.mybatisplus.extension.service.IService;
+import org.elasticsearch.search.SearchHit;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -40,4 +42,6 @@ public interface DocumentService extends IService<FileDocument> {
     R<?> getSourceDocStream(String sourceId);
 
     R<?> deleteDocumentById(String sourceId);
+
+    List<SearchHit> esDocumentByKeyword(String keyword, String userId) throws IOException;
 }

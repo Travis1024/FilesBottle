@@ -4,12 +4,10 @@ import cn.hutool.core.codec.Base64;
 import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.json.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSDownloadStream;
-import com.mongodb.client.gridfs.model.GridFSDownloadOptions;
 import com.mongodb.client.gridfs.model.GridFSFile;
 import com.travis.filesbottle.common.dubboservice.document.DubboDocUpdateDataService;
 import com.travis.filesbottle.common.dubboservice.document.DubboDocUserInfoService;
@@ -18,6 +16,7 @@ import com.travis.filesbottle.common.enums.BizCodeEnum;
 import com.travis.filesbottle.common.utils.BizCodeUtil;
 import com.travis.filesbottle.common.utils.R;
 import com.travis.filesbottle.document.entity.FileDocument;
+import com.travis.filesbottle.document.entity.bo.EsDocument;
 import com.travis.filesbottle.document.entity.dto.DownloadDocument;
 import com.travis.filesbottle.document.mapper.DocumentMapper;
 import com.travis.filesbottle.document.service.DocumentService;
@@ -28,26 +27,29 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.delete.DeleteResponse;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.index.query.MultiMatchQueryBuilder;
+import org.elasticsearch.index.query.Operator;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.gridfs.GridFsResource;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.sql.Timestamp;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 /**
  * <p>
@@ -382,6 +384,14 @@ public class DocumentServiceImpl extends ServiceImpl<DocumentMapper, FileDocumen
         return R.success(downloadDocument);
     }
 
+    /**
+     * @MethodName deleteDocumentById
+     * @Description 根据文档ID删除文档的相关信息
+     * @Author travis-wei
+     * @Data 2023/4/20
+     * @param sourceId
+     * @Return com.travis.filesbottle.common.utils.R<?>
+     **/
     @Override
     public R<?> deleteDocumentById(String sourceId) {
         // 一、首先查询文件记录是否存在
@@ -434,6 +444,74 @@ public class DocumentServiceImpl extends ServiceImpl<DocumentMapper, FileDocumen
         }
 
         return R.success("文件删除成功！");
+    }
+
+    /**
+     * @MethodName esDocumentByKeyword
+     * @Description 根据关键词ElaseicSearch搜索文档信息并返回
+     * @Author travis-wei
+     * @Data 2023/4/20
+     * @param keyword
+     * @param userId
+     * @Return java.util.List<org.elasticsearch.search.SearchHit>
+     **/
+    @Override
+    public List<SearchHit> esDocumentByKeyword(String keyword, String userId) throws IOException {
+        // 查询发送请求的用户所属团队的文件list
+        String teamId = getTeamIdByUserId(userId);
+        QueryWrapper<FileDocument> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq(FileDocument.DOC_TEAMID, teamId);
+        List<FileDocument> documentList = documentMapper.selectList(queryWrapper);
+        Set<String> hashSet = new HashSet<>();
+        for (FileDocument fileDocument : documentList) {
+            hashSet.add(fileDocument.getDocGridfsId());
+        }
+
+        // elasticsearch多字段查询
+        // 1、创建SearchRequest搜索请求，并指定要查询的索引
+        SearchRequest searchRequest = new SearchRequest("document");
+        // 2.1、创建SearchSourceBuilder条件构造
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+
+        // 2.2、MultiMatch查找
+        MultiMatchQueryBuilder multiMatchQueryBuilder = QueryBuilders.multiMatchQuery(keyword, EsDocument.FILE_NAME, EsDocument.FILE_DESCRIPTION);
+        multiMatchQueryBuilder.operator(Operator.OR);
+        searchSourceBuilder.query(multiMatchQueryBuilder);
+
+        // 3、将SearchSourceBuilder添加到 SearchRequest中
+        searchRequest.source(searchSourceBuilder);
+
+        // 4、执行查询
+        SearchResponse searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
+
+        // 5、输出查询时间
+        log.info("ES查询时间为：" + searchResponse.getTook());
+
+        SearchHit[] hits = searchResponse.getHits().getHits();
+        LinkedList<SearchHit> list = new LinkedList<>();
+        for (SearchHit hit : hits) {
+            // 获取文件ID
+            String gridFsId = (String) hit.getSourceAsMap().get(EsDocument.GRID_FS_ID);
+            // 如果团队文档中包含此文档的ID信息，则加入list中，并返回
+            if (hashSet.contains(gridFsId)) {
+                list.add(hit);
+            }
+        }
+        return list;
+    }
+
+
+    /**
+     * @MethodName getTeamIdByUserId
+     * @Description 根据用户ID查询用户所属团队ID信息
+     * @Author travis-wei
+     * @Data 2023/4/20
+     * @param userId
+     * @Return java.lang.String
+     **/
+    private String getTeamIdByUserId(String userId) {
+        DubboDocumentUser userInfo = dubboDocUserInfoService.getDocumentUserInfo(userId);
+        return userInfo.getUserTeamId();
     }
 
 

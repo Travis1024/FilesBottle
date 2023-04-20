@@ -29,4 +29,11 @@ public class EsDocument implements Serializable {
     private String fileDescription;
     @Field(type = FieldType.Text, analyzer = "ik-max-word")
     private String fileText;
+
+    public static final String GRID_FS_ID = "gridFsId";
+    public static final String PREVIEW_ID = "previewId";
+    public static final String FILE_NAME = "fileName";
+    public static final String FILE_DESCRIPTION = "fileDescription";
+    public static final String FILE_TEXT = "fileText";
+
 }
