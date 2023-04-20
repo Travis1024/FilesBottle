@@ -18,87 +18,24 @@
 
 
 
+
+
 - **<span id='index1'>已支持预览的文件类型</span>**
 
-  | 文件类型  |
-  | --------- |
-  | **xls**   |
-  | **xlsx**  |
-  | **doc**   |
-  | **docx**  |
-  | **ppt**   |
-  | **pptx**  |
-  | **txt**   |
-  | **odt**   |
-  | **ott**   |
-  | **sxw**   |
-  | **rtf**   |
-  | **wpd**   |
-  | **xsi**   |
-  | **ods**   |
-  | **ots**   |
-  | **sxc**   |
-  | **csv**   |
-  | **tsv**   |
-  | **odp**   |
-  | **otp**   |
-  | **pdf**   |
-  | **html**  |
-  | **png**   |
-  | **jpeg**  |
-  | **jpg**   |
-  | **py**    |
-  | **java**  |
-  | **cpp**   |
-  | **c**     |
-  | **xml**   |
-  | **php**   |
-  | **js**    |
-  | **json**  |
-  | **css**   |
-  | **mp4**   |
-  | **avi**   |
-  | **mov**   |
-  | **mp3**   |
-  | **wav**   |
-  | **flv**   |
-  | **xmind** |
-  | **bpmn**  |
-  | **eml**   |
-  | **epub**  |
-  | **obj**   |
-  | **3ds**   |
-  | **stl**   |
-  | **ply**   |
-  | **gltf**  |
-  | **glb**   |
-  | **off**   |
-  | **3dm**   |
-  | **fbx**   |
-  | **dae**   |
-  | **wrl**   |
-  | **3mf**   |
-  | **ifc**   |
-  | **brep**  |
-  | **step**  |
-  | **iges**  |
-  | **fcstd** |
-  | **bim**   |
-  | **dwg**   |
-  | **dxf**   |
-  | **md**    |
-  | **tif**   |
-  | **tiff**  |
-  | **tga**   |
-  | **svg**   |
-  | **zip**   |
-  | **rar**   |
-  | **jar**   |
-  | **tar**   |
-  | **gzip**  |
-  | **7z**    |
+  | 文件类型表 |      |      |      |       |      |      |      |
+  | ---------- | ---- | ---- | ---- | ----- | ---- | ---- | ---- |
+  | xls        | xlsx | doc  | docx | ppt   | pptx | txt  | odt  |
+  | ott        | sxw  | rtf  | wpd  | xsi   | ods  | ots  | sxc  |
+  | csv        | tsv  | odp  | otp  | pdf   | html | png  | jpeg |
+  | jpg        | py   | java | cpp  | c     | xml  | php  | js   |
+  | json       | css  | mp4  | avi  | mov   | mp3  | wav  | flv  |
+  | xmind      | bpmn | eml  | epub | obj   | 3ds  | stl  | ply  |
+  | gltf       | glb  | off  | 3dm  | fbx   | dae  | wrl  | 3mf  |
+  | ifc        | brep | step | iges | fcstd | bim  | dwg  | dxf  |
+  | md         | tif  | tiff | tga  | svg   | zip  | rar  | jar  |
+  | tar        | gzip | 7z   |      |       |      |      |      |
 
-  
+
 
 - <span id="index2">技术表</span>
 
