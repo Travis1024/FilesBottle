@@ -13,6 +13,7 @@
         <module name="filesbottle-knife4j" />
         <module name="filesbottle-auth" />
         <module name="filesbottle-common" />
+        <module name="filesbottle-ffmpeg" />
         <module name="filesbottle-member" />
         <module name="filesbottle-report" />
         <module name="filesbottle-wxm" />

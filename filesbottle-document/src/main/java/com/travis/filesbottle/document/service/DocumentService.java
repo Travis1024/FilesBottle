@@ -2,12 +2,15 @@ package com.travis.filesbottle.document.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.mongodb.client.gridfs.model.GridFSFile;
 import com.travis.filesbottle.common.utils.R;
 import com.travis.filesbottle.document.entity.FileDocument;
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.elasticsearch.search.SearchHit;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
 
@@ -44,4 +47,5 @@ public interface DocumentService extends IService<FileDocument> {
     R<?> deleteDocumentById(String sourceId);
 
     List<SearchHit> esDocumentByKeyword(String keyword, String userId) throws IOException;
+
 }

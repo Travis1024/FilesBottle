@@ -4,6 +4,7 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.mongodb.client.gridfs.GridFSBucket;
 import com.travis.filesbottle.common.constant.Constants;
 import com.travis.filesbottle.common.constant.PageConstants;
 import com.travis.filesbottle.common.enums.BizCodeEnum;
@@ -13,11 +14,9 @@ import com.travis.filesbottle.document.entity.FileDocument;
 import com.travis.filesbottle.document.entity.dto.DownloadDocument;
 import com.travis.filesbottle.document.service.DocumentService;
 import com.travis.filesbottle.document.service.TaskExecuteService;
-import com.travis.filesbottle.document.utils.FileTypeEnumUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
-import org.checkerframework.checker.units.qual.A;
 import org.elasticsearch.search.SearchHit;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -27,7 +26,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
-
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -55,9 +53,6 @@ public class DocumentsController {
 
     @Autowired
     private TaskExecuteService taskExecuteService;
-
-    @Autowired
-    private RestTemplate restTemplate;
 
 
 
@@ -116,6 +111,7 @@ public class DocumentsController {
         DownloadDocument data = (DownloadDocument) previewDocStream.getData();
         return R.success("预览文件获取成功！", data);
     }
+
 
 
     @ApiOperation(value = "文件删除接口，分三种情况：支持转为pdf进行在线预览 ｜ 支持使用kkFileView在线预览 ｜ 其他（不支持在线预览、源文件流即可预览、未知类型）")

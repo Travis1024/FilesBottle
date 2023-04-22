@@ -22,6 +22,7 @@
         <module>filesbottle-document</module>
         <module>filesbottle-auth</module>
         <module>filesbottle-knife4j</module>
+        <module>filesbottle-ffmpeg</module>
     </modules>
 
 
@@ -68,6 +69,7 @@
         <libreoffice.version>7.5.1</libreoffice.version>
         <markdown2pdf.version>2.0.1</markdown2pdf.version>
         <spring.mock.version>2.0.8</spring.mock.version>
+        <java.all.deps.version>3.3.1</java.all.deps.version>
 
     </properties>
 
@@ -379,6 +381,12 @@
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-mock</artifactId>
                 <version>${spring.mock.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>ws.schild</groupId>
+                <artifactId>jave-all-deps</artifactId>
+                <version>${java.all.deps.version}</version>
             </dependency>
 
         </dependencies>

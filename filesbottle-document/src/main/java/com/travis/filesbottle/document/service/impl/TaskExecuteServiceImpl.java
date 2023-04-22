@@ -35,6 +35,8 @@ public class TaskExecuteServiceImpl implements TaskExecuteService {
      */
     @Value("${kkfileview.project.urlprefix}")
     private String kkProjectUrlPrefix;
+    @Value("${ffmpeg.filepath}")
+    private String ffmpegFilePath;
 
 
     /**
@@ -58,6 +60,9 @@ public class TaskExecuteServiceImpl implements TaskExecuteService {
             taskConvertService = new TaskFileConvertPdfServiceImpl(fileDocument, inputStream);
         } else if (type >= 401 && type <= 600){
             taskConvertService = new TaskKKFileViewConvertServiceImpl(fileDocument, file, kkProjectUrlPrefix);
+        } else if (type >= 351 && type <= 400) {
+            // 处理视频文件
+            taskConvertService = new TaskVideoConvertServiceImpl(fileDocument, file, ffmpegFilePath);
         } else {
             taskConvertService = new TaskNoNeedConvertServiceImpl(fileDocument, inputStream);
         }

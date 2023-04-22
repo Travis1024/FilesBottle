@@ -11,6 +11,10 @@ server:
     context-path: /api/document
 
 
+ffmpeg:
+  filepath: /Users/travis/Desktop/FilesBottle_Project/video
+
+
 --- # kkFileView文件访问路径的前缀信息, 后续需要使用nginx进行代理
 kkfileview:
   project:

@@ -1,0 +1,38 @@
+# -------------------------------- dev-环境 -----------------------------------
+# 设置当前模块服务名称
+spring:
+  application:
+    name: gateway-server
+
+# 设置启动端口号
+server:
+  port: 48080
+
+
+# 配置dubbo信息
+dubbo:
+  application:
+    name: dubbo-${spring.application.name}
+  protocol:
+    port: -1
+    name: dubbo
+  registry:
+    address: nacos://140.246.171.8:8848?username=nacos&password=nacos
+    parameters.namespace: 64e29a8b-edd7-4f60-b941-24111fb1081c
+  #    parameters.register-consumer-url: true
+  # 设置消费者超时时间为3秒
+  consumer:
+    timeout: 3000
+
+
+
+# 设置日志文件名称、日志配置文件路径
+logging:
+  config: classpath:logback-dev.xml
+logback:
+  file:
+    path: ${user.home}/FilesBottleDev_Logs/${spring.application.name}
+
+
+
+

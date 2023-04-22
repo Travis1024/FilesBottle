@@ -1,0 +1,31 @@
+# -------------------------------- dev-环境 -----------------------------------
+# 设置当前模块服务名称
+spring:
+  application:
+    name: ffmpeg-server
+
+# 设置启动端口号
+server:
+  port: 48086
+
+
+ffmpeg:
+  path: /Users/travis/ffmpeg/ffmpeg
+  filepath: /Users/travis/Desktop/FilesBottle_Project/video/
+
+
+--- # 修改上传文件大小的限制
+spring:
+  servlet:
+    multipart:
+      max-file-size: 500MB
+      max-request-size: 500MB
+
+
+# 设置日志文件名称、日志配置文件路径
+logging:
+  config: classpath:logback-dev.xml
+
+logback:
+  file:
+    path: ${user.home}/FilesBottleDev_Logs/${spring.application.name}
