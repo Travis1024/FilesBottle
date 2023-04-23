@@ -10,8 +10,10 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>filesbottle-common</artifactId>
+    <version>${revision}</version>
 
     <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
     </properties>
@@ -40,5 +42,6 @@
             <artifactId>swagger-annotations</artifactId>
         </dependency>
     </dependencies>
+
 
 </project>

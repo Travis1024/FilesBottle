@@ -16,8 +16,9 @@ nginx:
 
 ffmpeg:
   neturl: http://${nginx.address}/hlsvideo/
-  path: /Users/travis/ffmpeg/ffmpeg
-  filepath: /Users/travis/Desktop/FilesBottle_Project/video/
+  path: /usr/bin/ffmpeg
+  filepath: /home/travis/hlsvideo/
+
 
 
 --- # 修改上传文件大小的限制
@@ -27,10 +28,9 @@ spring:
       max-file-size: 500MB
       max-request-size: 500MB
 
-
 # 设置日志文件名称、日志配置文件路径
 logging:
-  config: classpath:logback-dev.xml
+  config: classpath:logback-pro.xml
 
 logback:
   file:

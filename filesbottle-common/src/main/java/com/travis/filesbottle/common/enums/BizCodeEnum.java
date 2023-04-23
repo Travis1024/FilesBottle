@@ -1,6 +1,5 @@
 package com.travis.filesbottle.common.enums;
 
-import com.sun.xml.internal.ws.util.StringUtils;
 import javafx.util.Pair;
 import lombok.Getter;
 
