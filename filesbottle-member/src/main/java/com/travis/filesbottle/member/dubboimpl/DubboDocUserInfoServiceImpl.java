@@ -1,13 +1,14 @@
 package com.travis.filesbottle.member.dubboimpl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.travis.filesbottle.common.dubboservice.document.DubboDocUserInfoService;
-import com.travis.filesbottle.common.dubboservice.document.bo.DubboDocumentUser;
+import com.travis.filesbottle.common.dubboservice.member.DubboDocUserInfoService;
+import com.travis.filesbottle.common.dubboservice.member.bo.DubboDocumentUser;
 import com.travis.filesbottle.member.entity.User;
 import com.travis.filesbottle.member.mapper.UserMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.config.annotation.DubboService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 /**
  * @ClassName DubboDocUserInfoServiceImpl
@@ -18,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 @DubboService
 @Slf4j
+@Service
 public class DubboDocUserInfoServiceImpl implements DubboDocUserInfoService {
 
     @Autowired

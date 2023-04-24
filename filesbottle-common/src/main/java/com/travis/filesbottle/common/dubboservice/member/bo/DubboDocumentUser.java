@@ -1,4 +1,4 @@
-package com.travis.filesbottle.common.dubboservice.document.bo;
+package com.travis.filesbottle.common.dubboservice.member.bo;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;

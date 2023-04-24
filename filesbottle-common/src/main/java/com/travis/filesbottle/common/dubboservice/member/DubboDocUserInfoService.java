@@ -1,6 +1,6 @@
-package com.travis.filesbottle.common.dubboservice.document;
+package com.travis.filesbottle.common.dubboservice.member;
 
-import com.travis.filesbottle.common.dubboservice.document.bo.DubboDocumentUser;
+import com.travis.filesbottle.common.dubboservice.member.bo.DubboDocumentUser;
 
 /**
  * @ClassName DubboDocUserInfoService

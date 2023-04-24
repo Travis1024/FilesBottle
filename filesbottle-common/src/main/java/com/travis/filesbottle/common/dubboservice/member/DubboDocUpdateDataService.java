@@ -1,4 +1,4 @@
-package com.travis.filesbottle.common.dubboservice.document;
+package com.travis.filesbottle.common.dubboservice.member;
 
 /**
  * @ClassName DubboDocUpdateDataService

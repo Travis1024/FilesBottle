@@ -43,7 +43,7 @@ public class DownloadDocument implements Serializable {
     @ApiModelProperty("文件字节流数据")
     private byte[] bytes;
 
-    @ApiModelProperty("kkFileView文件预览URL")
+    @ApiModelProperty("kkFileView文件、ffmpeg 视频切片文件，预览URL")
     private String previewUrl;
 
 }

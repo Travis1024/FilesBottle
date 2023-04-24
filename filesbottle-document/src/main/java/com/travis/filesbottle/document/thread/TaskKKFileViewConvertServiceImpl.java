@@ -100,7 +100,6 @@ public class TaskKKFileViewConvertServiceImpl implements TaskConvertService{
     public void uploadFileToEs() throws IOException {
         EsDocument esDocument = new EsDocument();
         esDocument.setGridFsId(fileDocument.getDocGridfsId());
-        esDocument.setPreviewId(fileDocument.getDocPreviewId());
         esDocument.setFileName(fileDocument.getDocName());
         esDocument.setFileDescription(fileDocument.getDocDescription());
         // TODO 内容的elasticSearch最后做

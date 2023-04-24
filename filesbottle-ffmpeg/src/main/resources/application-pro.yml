@@ -4,14 +4,25 @@ spring:
   application:
     name: ffmpeg-server
 
+
 # 设置启动端口号
 server:
   port: 48086
   servlet:
     context-path: /api/ffmpeg
 
+
 custom:
   ip: 140.246.171.8
+
+
+--- # 设置 nacos discovery ip 地址
+spring:
+  cloud:
+    nacos:
+      discovery:
+        ip: 140.246.171.8
+
 
 
 # 在生产环境中进行部署的时候需要进行指定、运行 jar 包 (nginx ip + 端口号)
@@ -44,14 +55,15 @@ spring:
         dashboard: 140.246.171.8:8858
         port: 8719
 
+
 # 配置dubbo信息
 dubbo:
   application:
     name: dubbo-${spring.application.name}
   protocol:
-    port: -1
+    port: 20880
     name: dubbo
-    threads: 400
+    threads: 200
     threadpool: cached
     dispatcher: message
   registry:

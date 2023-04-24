@@ -13,6 +13,14 @@ server:
     context-path: /api/member
 
 
+--- # 设置 nacos discovery ip 地址
+spring:
+  cloud:
+    nacos:
+      discovery:
+        ip: 140.246.171.8
+
+
 --- # 配置spring-data-redis
 spring:
   redis:
@@ -123,7 +131,7 @@ spring:
       enabled: true
       eager: true
       transport:
-        dashboard: 127.0.0.1:8858
+        dashboard: 140.246.171.8:8858
         port: 8719
 
 
@@ -149,7 +157,7 @@ dubbo:
 
 # 设置日志文件名称、日志配置文件路径
 logging:
-  config: classpath:logback-dev.xml
+  config: classpath:logback-pro.xml
 logback:
   file:
     path: ${user.home}/FilesBottleDev_Logs/${spring.application.name}

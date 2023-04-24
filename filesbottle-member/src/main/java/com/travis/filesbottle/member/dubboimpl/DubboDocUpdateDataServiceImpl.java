@@ -3,15 +3,15 @@ package com.travis.filesbottle.member.dubboimpl;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.travis.filesbottle.common.constant.DocumentConstants;
-import com.travis.filesbottle.common.dubboservice.document.DubboDocUpdateDataService;
+import com.travis.filesbottle.common.dubboservice.member.DubboDocUpdateDataService;
 import com.travis.filesbottle.member.entity.Team;
 import com.travis.filesbottle.member.entity.User;
 import com.travis.filesbottle.member.mapper.TeamMapper;
 import com.travis.filesbottle.member.mapper.UserMapper;
-import com.travis.filesbottle.member.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.config.annotation.DubboService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 /**
  * @ClassName DubboDocUpdateDataServiceImpl
@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 @Slf4j
 @DubboService
+@Service
 public class DubboDocUpdateDataServiceImpl implements DubboDocUpdateDataService {
 
 

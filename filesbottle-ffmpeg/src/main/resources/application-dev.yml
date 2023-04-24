@@ -43,12 +43,13 @@ spring:
         dashboard: 127.0.0.1:8858
         port: 8719
 
+
 # 配置dubbo信息
 dubbo:
   application:
     name: dubbo-${spring.application.name}
   protocol:
-    port: -1
+    port: 20880
     name: dubbo
     threads: 400
     threadpool: cached

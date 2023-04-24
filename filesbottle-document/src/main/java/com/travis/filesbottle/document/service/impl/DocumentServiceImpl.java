@@ -9,9 +9,10 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSDownloadStream;
 import com.mongodb.client.gridfs.model.GridFSFile;
-import com.travis.filesbottle.common.dubboservice.document.DubboDocUpdateDataService;
-import com.travis.filesbottle.common.dubboservice.document.DubboDocUserInfoService;
-import com.travis.filesbottle.common.dubboservice.document.bo.DubboDocumentUser;
+import com.travis.filesbottle.common.dubboservice.member.DubboDocUpdateDataService;
+import com.travis.filesbottle.common.dubboservice.member.DubboDocUserInfoService;
+import com.travis.filesbottle.common.dubboservice.member.bo.DubboDocumentUser;
+import com.travis.filesbottle.common.dubboservice.ffmpeg.DubboFfmpegService;
 import com.travis.filesbottle.common.enums.BizCodeEnum;
 import com.travis.filesbottle.common.utils.BizCodeUtil;
 import com.travis.filesbottle.common.utils.R;
@@ -25,7 +26,6 @@ import com.travis.filesbottle.document.utils.FileTypeEnumUtil;
 import io.seata.spring.annotation.GlobalTransactional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.config.annotation.DubboReference;
-import org.bson.Document;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.search.SearchRequest;
@@ -37,7 +37,6 @@ import org.elasticsearch.index.query.Operator;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
-import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -48,13 +47,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -99,6 +94,8 @@ public class DocumentServiceImpl extends ServiceImpl<DocumentMapper, FileDocumen
     private DubboDocUserInfoService dubboDocUserInfoService;
     @DubboReference
     private DubboDocUpdateDataService dubboDocUpdateDataService;
+    @DubboReference
+    private DubboFfmpegService dubboFfmpegService;
 
 
     /**
@@ -272,7 +269,7 @@ public class DocumentServiceImpl extends ServiceImpl<DocumentMapper, FileDocumen
 
     /**
      * @MethodName getPreviewDocStream
-     * @Description 通过sourceId预览文件，maybe 不支持在线预览 or pdf在线预览 or 源文件在线预览 or kkFileView的url在线预览
+     * @Description 通过sourceId预览文件，maybe 不支持在线预览 or pdf在线预览 or 源文件在线预览 or kkFileView的url在线预览 or ffmpeg视频切片预览
      * @Author travis-wei
      * @Data 2023/4/14
      * @param sourceId
@@ -314,12 +311,26 @@ public class DocumentServiceImpl extends ServiceImpl<DocumentMapper, FileDocumen
             // 获取到的预览文件字节流数据
             downloadDocument.setBytes(bytesByIdResult.getData());
 
-        } else if (typeCode >= 201 && typeCode <= 400) {
+        } else if (typeCode >= 201 && typeCode <= 350) {
             // 【情况三：文件支持源文件在线预览】支持返回源文件流，进行在线预览
             return getSourceDocStream(sourceId);
 
+        } else if (typeCode >= 351 && typeCode <= 400) {
+            // 【情况四：ffmpeg 视频文件在线预览】返回视频文件在线预览的 URL
+            // 组装DownloadDocument（返回信息）
+            downloadDocument.setDocGridfsId(fileDocument.getDocGridfsId());
+            downloadDocument.setDocName(fileDocument.getDocName());
+            downloadDocument.setDocSize(fileDocument.getDocSize());
+            downloadDocument.setDocContentTypeText(fileDocument.getDocContentTypeText());
+            downloadDocument.setDocSuffix(fileDocument.getDocSuffix());
+            downloadDocument.setDocFileTypeCode(fileDocument.getDocFileTypeCode());
+            downloadDocument.setDocDescription(fileDocument.getDocDescription());
+            // 通过 dubbo 远程获取 ffmpeg 服务器提供的视频预览的url
+            String videoUrl = dubboFfmpegService.getVideoUrl(sourceId);
+            downloadDocument.setPreviewUrl(videoUrl);
+
         } else if (typeCode >= 401 && typeCode <= 600) {
-            // 【情况四：文件支持kkFileView在线预览】支持使用kkFileView进行在线预览
+            // 【情况五：文件支持kkFileView在线预览】支持使用kkFileView进行在线预览
 
             // 组装DownloadDocument（返回信息）
             downloadDocument.setDocGridfsId(fileDocument.getDocGridfsId());

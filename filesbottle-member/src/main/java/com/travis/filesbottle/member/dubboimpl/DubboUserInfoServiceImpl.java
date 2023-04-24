@@ -8,6 +8,7 @@ import com.travis.filesbottle.member.mapper.UserMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.config.annotation.DubboService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.List;
@@ -21,6 +22,7 @@ import java.util.List;
  */
 @Slf4j
 @DubboService
+@Service
 public class DubboUserInfoServiceImpl implements DubboUserInfoService {
 
     @Autowired

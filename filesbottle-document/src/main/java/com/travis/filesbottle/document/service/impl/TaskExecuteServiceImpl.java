@@ -1,9 +1,11 @@
 package com.travis.filesbottle.document.service.impl;
 
+import com.travis.filesbottle.common.dubboservice.ffmpeg.DubboFfmpegService;
 import com.travis.filesbottle.document.entity.FileDocument;
 import com.travis.filesbottle.document.service.TaskExecuteService;
 import com.travis.filesbottle.document.thread.*;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.dubbo.config.annotation.DubboReference;
 import org.jodconverter.core.DocumentConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,6 +31,9 @@ public class TaskExecuteServiceImpl implements TaskExecuteService {
 
     @Autowired
     public DocumentConverter documentConverter;
+
+    @DubboReference
+    public DubboFfmpegService dubboFfmpegService;
 
     /**
      * 从配置文件中获取文件前缀信息

@@ -113,7 +113,6 @@ public class DocumentsController {
     }
 
 
-
     @ApiOperation(value = "文件删除接口，分三种情况：支持转为pdf进行在线预览 ｜ 支持使用kkFileView在线预览 ｜ 其他（不支持在线预览、源文件流即可预览、未知类型）")
     @DeleteMapping("/delete/document")
     public R<?> deleteDocumentById(@RequestParam("sourceId") String sourceId) {
