@@ -158,6 +158,11 @@
             <artifactId>spring-mock</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>org.apache.rocketmq</groupId>
+            <artifactId>rocketmq-spring-boot-starter</artifactId>
+        </dependency>
+
     </dependencies>
 
     <build>

@@ -75,7 +75,7 @@
   | filesbottle-gateway      | 网关模块                           |      |
   | filesbottle-dependencies | 统一管理版本信息                   |      |
   | filesbottle-search       | 搜索模块（文件搜索+其他搜索）      |      |
-  | filesbottle-report       | 报表模块                           |      |
+  | filesbottle-report       | 报表模块 + 日志                    |      |
   | filesbottle-system       | 系统模块                           |      |
   | filesbottle-member       | 人员管理模块                       |      |
   | filesbottle-wxm          | 微信公众号模块                     |      |

@@ -70,7 +70,7 @@ public enum FileTypeEnum {
 
 
     /*---------------- [351 - 400]  -->  视频文件：支持ffmpeg进行视频切片，进行在线播放 --------------------- */
-    // 视频文件 TODO 考虑采用hls协议，用ffmpeg做视频的切片（m3u8 + ts）、需要单独实现视频切片存储
+    // 视频文件
     MP4((short) 351, "mp4"), // ffmpeg可以直接进行切片
     AVI((short) 352, "avi"), // ffmpeg可以直接进行切片
     MOV((short) 353, "mov"), // 以下视频格式：ffmpeg将格式转为mp4，然后进行切片

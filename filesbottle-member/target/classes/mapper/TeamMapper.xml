@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.travis.filesbottle.member.mapper.TeamMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.travis.filesbottle.member.entity.Team">
+        <id column="team_zzid" property="teamZzid" />
+        <result column="team_id" property="teamId" />
+        <result column="team_name" property="teamName" />
+        <result column="team_creator" property="teamCreator" />
+        <result column="team_create_time" property="teamCreateTime" />
+        <result column="team_level" property="teamLevel" />
+        <result column="team_people_number" property="teamPeopleNumber" />
+        <result column="team_description" property="teamDescription" />
+        <result column="team_enable" property="teamEnable" />
+        <result column="team_doc_public_number" property="teamDocPublicNumber" />
+        <result column="team_doc_private_number" property="teamDocPrivateNumber" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        team_zzid, team_id, team_name, team_creator, team_create_time, team_level, team_people_number, team_description, team_enable, team_doc_public_number, team_doc_private_number
+    </sql>
+
+</mapper>
