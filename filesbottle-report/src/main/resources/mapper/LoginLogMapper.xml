@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.travis.filesbottle.report.mapper.LoginLogMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.travis.filesbottle.report.entity.LoginLog">
+        <id column="login_zzid" property="loginZzid" />
+        <result column="login_person_id" property="loginPersonId" />
+        <result column="login_person_name" property="loginPersonName" />
+        <result column="login_time" property="loginTime" />
+        <result column="login_ip" property="loginIp" />
+        <result column="login_way" property="loginWay" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        login_zzid, login_person_id, login_person_name, login_time, login_ip, login_way
+    </sql>
+
+</mapper>

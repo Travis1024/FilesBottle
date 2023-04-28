@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.travis.filesbottle.document.mapper.FolderMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.travis.filesbottle.document.entity.Folder">
+        <id column="folder_zzid" property="folderZzid" />
+        <result column="folder_name" property="folderName" />
+        <result column="folder_id" property="folderId" />
+        <result column="folder_creator" property="folderCreator" />
+        <result column="folder_team" property="folderTeam" />
+        <result column="folder_parent_id" property="folderParentId" />
+        <result column="folder_create_time" property="folderCreateTime" />
+        <result column="folder_layer" property="folderLayer" />
+        <result column="folder_path" property="folderPath" />
+        <result column="folder_password" property="folderPassword" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        folder_zzid, folder_name, folder_id, folder_creator, folder_team, folder_parent_id, folder_create_time, folder_layer, folder_path, folder_password
+    </sql>
+
+</mapper>

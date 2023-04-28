@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.travis.filesbottle.report.mapper.ViewLogMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.travis.filesbottle.report.entity.ViewLog">
+        <id column="view_zzid" property="viewZzid" />
+        <result column="view_document_id" property="viewDocumentId" />
+        <result column="view_document_name" property="viewDocumentName" />
+        <result column="view_document_team" property="viewDocumentTeam" />
+        <result column="view_person_id" property="viewPersonId" />
+        <result column="view_person_name" property="viewPersonName" />
+        <result column="view_time" property="viewTime" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        view_zzid, view_document_id, view_document_name, view_document_team, view_person_id, view_person_name, view_time
+    </sql>
+
+</mapper>

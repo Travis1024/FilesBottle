@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.travis.filesbottle.report.mapper.DownloadLogMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.travis.filesbottle.report.entity.DownloadLog">
+        <id column="down_zzid" property="downZzid" />
+        <result column="down_document_id" property="downDocumentId" />
+        <result column="down_document_name" property="downDocumentName" />
+        <result column="down_document_team" property="downDocumentTeam" />
+        <result column="down_person_id" property="downPersonId" />
+        <result column="down_person_name" property="downPersonName" />
+        <result column="down_time" property="downTime" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        down_zzid, down_document_id, down_document_name, down_document_team, down_person_id, down_person_name, down_time
+    </sql>
+
+</mapper>
