@@ -15,7 +15,7 @@ import lombok.experimental.Accessors;
 
 /**
  * <p>
- * 
+ *
  * </p>
  *
  * @author travis-wei
@@ -31,7 +31,7 @@ public class Folder extends Model<Folder> {
     private static final long serialVersionUID = 1L;
 
     @ApiModelProperty("文件夹自增 Id")
-    @TableId(value = "folder_zzid", type = IdType.ASSIGN_ID)
+    @TableId(value = "folder_zzid", type = IdType.AUTO)
     private Long folderZzid;
 
     @ApiModelProperty("文件夹名称")
