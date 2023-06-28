@@ -6,19 +6,25 @@
 
 ### 目录
 
-​		1、[已支持预览的文件类型](#index1)
+​		1、[项目架构图](#index0)
 
-​		2、[技术表](#index2)
+​		2、[已支持预览的文件类型](#index1)
 
-​		3、[后端微服务模块](#index3)
+​		3、[技术表](#index2)
 
-​		4、[前端计划](#index4)
+​		4、[后端微服务模块](#index3)
 
-​		5、[进度表](#index5)
+​		5、[前端计划](#index4)
+
+​		6、[进度表](#index5)
 
 
 
 ---
+
+- **<span id='index0'>项目架构图</span>**
+
+  ![image-20230628161400644](https://travisnotes.oss-cn-shanghai.aliyuncs.com/mdpic/202306281614763.png)
 
 
 
@@ -69,19 +75,18 @@
 
 - <span id="index3">后端微服务</span>
 
-  | 后端模块名               | 模块说明                           |      |
-  | ------------------------ | ---------------------------------- | ---- |
-  | filesbottle-common       | 公共模块                           |      |
-  | filesbottle-gateway      | 网关模块                           |      |
-  | filesbottle-dependencies | 统一管理版本信息                   |      |
-  | filesbottle-search       | 搜索模块（文件搜索+其他搜索）      |      |
-  | filesbottle-report       | 报表模块 + 日志                    |      |
-  | filesbottle-system       | 系统模块                           |      |
-  | filesbottle-member       | 人员管理模块                       |      |
-  | filesbottle-wxm          | 微信公众号模块                     |      |
-  | filesbottle-document     | 文件管理模块                       |      |
-  | filesbottle-auth         | 登录管理模块                       |      |
-  | filesbottle-ffmpeg       | ffmpeg视频转码切片模块（单独部署） |      |
+  | 后端模块名           | 模块说明                           |      |
+  | -------------------- | ---------------------------------- | ---- |
+  | filesbottle-common   | 公共模块                           |      |
+  | filesbottle-gateway  | 网关模块                           |      |
+  | filesbottle-search   | 搜索模块（文件搜索+其他搜索）      |      |
+  | filesbottle-report   | 报表模块 + 日志                    |      |
+  | filesbottle-system   | 系统模块                           |      |
+  | filesbottle-member   | 人员管理模块                       |      |
+  | filesbottle-wxm      | 微信公众号模块                     |      |
+  | filesbottle-document | 文件管理模块                       |      |
+  | filesbottle-auth     | 登录管理模块                       |      |
+  | filesbottle-ffmpeg   | ffmpeg视频转码切片模块（单独部署） |      |
 
 
 
