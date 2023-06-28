@@ -24,7 +24,7 @@
 
 - **<span id='index0'>项目架构图</span>**
 
-  ![image-20230628161400644](https://travisnotes.oss-cn-shanghai.aliyuncs.com/mdpic/202306281614763.png)
+  ![image-20230628163000890](https://travisnotes.oss-cn-shanghai.aliyuncs.com/mdpic/202306281630951.png)
 
 
 
@@ -67,9 +67,11 @@
   | hutool               | 常用工具包               |          |
   | mongoDB              | 文件存储数据库           |          |
   | elasticsearch        | es搜索                   |          |
+  | kibana               | 可视化                   |          |
   | kkFileView           | 文件在线预览             |          |
   | xxl-job              | 定时任务                 |          |
   | sentinel             | 流量防控                 |          |
+  | seata                | 分布式事务               |          |
 
 
 
@@ -112,7 +114,7 @@
   | 2023-04-05       | mybatisplus逆向生成、完善tokenjwt                            |          |
   | 2023-04-06       | 完成鉴权、nacos整合dubbo                                     |          |
   | 2023-04-07       | 对鉴权进行修改、简单压测                                     |          |
-  | 2023-04.08—04.14 | ElasticSearch、seats、kibana、itextpdf、poi集成<br />文件下载、文件上传、文件预览功能实现 |          |
+  | 2023-04.08—04.14 | ElasticSearch、seata、kibana、itextpdf、poi集成<br />文件下载、文件上传、文件预览功能实现 |          |
   | 2023-04-15       | 完成对ppt、pptx到pdf的转换                                   |          |
   | 2023-04-16       | （是否采用上述转换未决定）可能会考虑使用jodconterver         |          |
   | 2023-04-17       | 完成对jodconterver的实现                                     |          |
