@@ -77,18 +77,18 @@
 
 - <span id="index3">后端微服务</span>
 
-  | 后端模块名           | 模块说明                           |      |
-  | -------------------- | ---------------------------------- | ---- |
-  | filesbottle-common   | 公共模块                           |      |
-  | filesbottle-gateway  | 网关模块                           |      |
-  | filesbottle-search   | 搜索模块（文件搜索+其他搜索）      |      |
-  | filesbottle-report   | 报表模块 + 日志                    |      |
-  | filesbottle-system   | 系统模块                           |      |
-  | filesbottle-member   | 人员管理模块                       |      |
-  | filesbottle-wxm      | 微信公众号模块                     |      |
-  | filesbottle-document | 文件管理模块                       |      |
-  | filesbottle-auth     | 登录管理模块                       |      |
-  | filesbottle-ffmpeg   | ffmpeg视频转码切片模块（单独部署） |      |
+  | 后端模块名           | 模块说明                           | Mysql数据库     |
+  | -------------------- | ---------------------------------- | --------------- |
+  | filesbottle-common   | 公共模块                           |                 |
+  | filesbottle-gateway  | 网关模块                           |                 |
+  | filesbottle-search   | 搜索模块（文件搜索+其他搜索）      |                 |
+  | filesbottle-report   | 报表模块 + 日志                    | filesbottle-rms |
+  | filesbottle-system   | 系统模块                           |                 |
+  | filesbottle-member   | 人员管理模块                       | filesbottle-ums |
+  | filesbottle-wxm      | 微信公众号模块                     |                 |
+  | filesbottle-document | 文件管理模块                       | filesbottle-dms |
+  | filesbottle-auth     | 登录管理模块                       |                 |
+  | filesbottle-ffmpeg   | ffmpeg视频转码切片模块（单独部署） |                 |
 
 
 
