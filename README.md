@@ -24,7 +24,7 @@
 
 - **<span id='index0'>项目架构图</span>**
 
-  ![image-20230628163000890](https://travisnotes.oss-cn-shanghai.aliyuncs.com/mdpic/202306281630951.png)
+  ![image-20230629110744194](https://travisnotes.oss-cn-shanghai.aliyuncs.com/mdpic/202306291107243.png)
 
 
 
@@ -77,18 +77,19 @@
 
 - <span id="index3">后端微服务</span>
 
-  | 后端模块名           | 模块说明                           | Mysql数据库     |
-  | -------------------- | ---------------------------------- | --------------- |
-  | filesbottle-common   | 公共模块                           |                 |
-  | filesbottle-gateway  | 网关模块                           |                 |
-  | filesbottle-search   | 搜索模块（文件搜索+其他搜索）      |                 |
-  | filesbottle-report   | 报表模块 + 日志                    | filesbottle-rms |
-  | filesbottle-system   | 系统模块                           |                 |
-  | filesbottle-member   | 人员管理模块                       | filesbottle-ums |
-  | filesbottle-wxm      | 微信公众号模块                     |                 |
-  | filesbottle-document | 文件管理模块                       | filesbottle-dms |
-  | filesbottle-auth     | 登录管理模块                       |                 |
-  | filesbottle-ffmpeg   | ffmpeg视频转码切片模块（单独部署） |                 |
+  | 后端模块名           | 模块说明                           | Mysql数据库     | 启动端口 |
+  | -------------------- | ---------------------------------- | --------------- | -------- |
+  | filesbottle-common   | 公共模块                           |                 |          |
+  | filesbottle-gateway  | 网关模块                           |                 | 48080    |
+  | filesbottle-search   | 搜索模块（文件搜索+其他搜索）      |                 |          |
+  | filesbottle-report   | 报表模块 + 日志                    | filesbottle-rms | 48087    |
+  | filesbottle-system   | 系统模块                           |                 |          |
+  | filesbottle-member   | 人员管理模块                       | filesbottle-ums | 48083    |
+  | filesbottle-wxm      | 微信公众号模块                     |                 |          |
+  | filesbottle-document | 文件管理模块                       | filesbottle-dms | 48082    |
+  | filesbottle-auth     | 登录管理模块                       |                 | 48081    |
+  | filesbottle-ffmpeg   | ffmpeg视频转码切片模块（单独部署） |                 | 48086    |
+  | filesbottle-knife4j  | knife4文档聚合模块                 |                 | 48079    |
 
 
 
