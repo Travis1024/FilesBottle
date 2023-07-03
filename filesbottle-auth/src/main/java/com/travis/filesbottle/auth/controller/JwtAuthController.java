@@ -5,6 +5,7 @@ import com.travis.filesbottle.auth.config.JwtPropertiesConfiguration;
 import com.travis.filesbottle.auth.utils.JwtTokenUtil;
 import com.travis.filesbottle.common.constant.JwtConstants;
 import com.travis.filesbottle.common.constant.TokenConstants;
+import com.travis.filesbottle.common.dubboservice.auth.bo.DubboAuthUser;
 import com.travis.filesbottle.common.dubboservice.member.DubboUserInfoService;
 import com.travis.filesbottle.common.dubboservice.member.bo.DubboMemberUser;
 import com.travis.filesbottle.common.enums.BizCodeEnum;
@@ -19,6 +20,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.Map;
 
 /**
@@ -49,6 +52,33 @@ public class JwtAuthController {
 //        DubboMemberUser userBasicInfo = dubboUserInfoService.getUserBasicInfo(userId);
 //        return R.success(userBasicInfo);
 //    }
+
+
+    @ApiOperation(value = "nginx鉴权请求服务")
+    @GetMapping("/check")
+    public void nginxAuth(HttpServletRequest request, HttpServletResponse response) {
+        String token = request.getHeader(TokenConstants.AUTHENTICATION);
+        log.info("token:" + token);
+        if (StrUtil.isEmpty(token)) {
+            response.setStatus(401);
+            return;
+        }
+        // 验证 token 里面的 userId 是否为空
+        String userId = JwtTokenUtil.getUserIdFromToken(token);
+        if (StrUtil.isEmpty(userId)) {
+            response.setStatus(401);
+            return;
+        }
+        // 对Token解签名，并验证Token是否过期
+        boolean isJwtNotValid = JwtTokenUtil.isTokenExpired(token);
+
+        // 如果token已经过期，判断token能够被刷新
+        if(isJwtNotValid){
+            response.setStatus(401);
+            return;
+        }
+        response.setStatus(200);
+    }
 
 
     /**

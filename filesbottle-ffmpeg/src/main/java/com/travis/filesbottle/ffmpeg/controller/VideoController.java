@@ -70,6 +70,14 @@ public class VideoController {
         fileReader.writeToStream(response.getOutputStream());
     }
 
+    @GetMapping("/ts")
+    public void getTsFile(@RequestParam("sourceId") String sourceId, @RequestParam("tsName") String tsName, HttpServletResponse response) throws IOException {
+        String tsFilePath = videoFilePath + sourceId + "/" + tsName;
+        FileReader fileReader = new FileReader(tsFilePath);
+        log.info(tsFilePath);
+        fileReader.writeToStream(response.getOutputStream());
+    }
+
 
     /**
      * @MethodName getHandleUrl

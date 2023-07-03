@@ -59,7 +59,6 @@ dubbo:
     timeout: 10000
 
 
-
 # 定义有关jwt的配置
 filesbottle:
   jwt:

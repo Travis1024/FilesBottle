@@ -1,8 +1,7 @@
 package com.travis.filesbottle.common.utils;
 
-import cn.hutool.core.util.StrUtil;
 import com.travis.filesbottle.common.enums.BizCodeEnum;
-import javafx.util.Pair;
+import cn.hutool.core.lang.Pair;
 import lombok.Data;
 import lombok.experimental.Accessors;
 

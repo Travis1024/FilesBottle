@@ -1,6 +1,6 @@
 package com.travis.filesbottle.common.enums;
 
-import javafx.util.Pair;
+import cn.hutool.core.lang.Pair;
 import lombok.Getter;
 
 /**
@@ -97,7 +97,7 @@ public enum BizCodeEnum {
      * @Data 2023/4/1
      * @param moudleCode	错误模块码 eg:10
      * @param bizCode	错误类型码 eg:404
-     * @Return javafx.util.Pair<java.lang.Integer,java.lang.String>
+     * @Return cn.hutool.core.lang.Pair<java.lang.Integer,java.lang.String>
      **/
     public static Pair<Integer, String> buildErrorCode(BizCodeEnum moudleCode, BizCodeEnum bizCode) {
         int code = moudleCode.getCode() * 1000 + bizCode.getCode();
@@ -111,7 +111,7 @@ public enum BizCodeEnum {
      * @Author travis-wei
      * @Data 2023/4/1
      * @param bizCode   错误类型 eg:404
-     * @Return javafx.util.Pair<java.lang.Integer,java.lang.String>
+     * @Return cn.hutool.core.lang.Pair<java.lang.Integer,java.lang.String>
      **/
     public static Pair<Integer, String> buildErrorCode(BizCodeEnum bizCode) {
         int code = BizCodeEnum.MOUDLE_UNKNOW.getCode() * 1000 + bizCode.getCode();
@@ -124,7 +124,7 @@ public enum BizCodeEnum {
      * @Author travis-wei
      * @Data 2023/4/1
      * @param moudleCode 成功模块码 eg:11 (网关模块)
-     * @Return javafx.util.Pair<java.lang.Integer,java.lang.String>
+     * @Return cn.hutool.core.lang.Pair<java.lang.Integer,java.lang.String>
      **/
     public static Pair<Integer, String> buildSuccessCode(BizCodeEnum moudleCode) {
         int code = moudleCode.getCode() * 1000 + BizCodeEnum.SUCCESS.getCode();
@@ -137,7 +137,7 @@ public enum BizCodeEnum {
      * @Author travis-wei
      * @Data 2023/4/1
      * @param
-     * @Return javafx.util.Pair<java.lang.Integer,java.lang.String>
+     * @Return cn.hutool.core.lang.Pair<java.lang.Integer,java.lang.String>
      **/
     public static Pair<Integer, String> buildSuccessCode() {
         int code = BizCodeEnum.MOUDLE_UNKNOW.getCode() * 1000 + BizCodeEnum.SUCCESS.getCode();

@@ -81,9 +81,9 @@ spring:
   datasource:
     druid:
       driver-class-name: com.mysql.cj.jdbc.Driver
-      url: jdbc:mysql://140.246.171.8:3306/filesbottle_dms?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+      url: jdbc:mysql://140.246.171.8:3307/filesbottle_dms?useUnicode=true&characterEncoding=utf-8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
       username: root
-      password: w1270278575
+      password: WAN936936@wan
       # 初始化大小，最小，最大
       initial-size: 20
       max-active: 1000
