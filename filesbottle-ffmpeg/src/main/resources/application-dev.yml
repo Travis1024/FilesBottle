@@ -23,6 +23,8 @@ ffmpeg:
   neturl: http://${nginx.address}/hlsvideo/
   path: /Users/travis/ffmpeg/ffmpeg
   filepath: /Users/travis/Desktop/FilesBottle_Project/video/
+  keypath: //Users/travis/Desktop/FilesBottle_Project/
+  getkeyapi: http://140.246.171.8:48081/api/auth/ffmpeg/getkey?asset_id=
 
 
 --- # 修改上传文件大小的限制

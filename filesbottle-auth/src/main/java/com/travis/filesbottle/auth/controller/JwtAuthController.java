@@ -46,13 +46,6 @@ public class JwtAuthController {
     @DubboReference
     private DubboUserInfoService dubboUserInfoService;
 
-//    @ApiOperation(value = "测试dubbo")
-//    @PostMapping("/testdubbo")
-//    public R<?> testDubbo(@RequestParam(name = "userid") String userId) {
-//        DubboMemberUser userBasicInfo = dubboUserInfoService.getUserBasicInfo(userId);
-//        return R.success(userBasicInfo);
-//    }
-
 
     @ApiOperation(value = "nginx鉴权请求服务")
     @GetMapping("/check")

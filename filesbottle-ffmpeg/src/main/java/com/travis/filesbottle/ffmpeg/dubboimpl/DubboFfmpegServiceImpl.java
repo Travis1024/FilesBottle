@@ -31,7 +31,9 @@ public class DubboFfmpegServiceImpl implements DubboFfmpegService {
 
     @Override
     public String getVideoUrl(String sourceId) {
-        return "http://" + customIp + ":" + port + contextPath + "/hlsvideo/video?sourceId=" + sourceId;
+        // TODO dubbo远程调用auth模块生成 token， 需要请求生成一次性 token (存到 redis 中)
+        String token = "";
+        return "http://" + customIp + ":" + port + contextPath + "/hlsvideo/video?sourceId=" + sourceId + "&token=" + token;
     }
 
     @Override

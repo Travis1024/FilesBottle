@@ -1,6 +1,8 @@
 package com.travis.filesbottle.ffmpeg.controller;
 
+import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.io.file.FileReader;
+import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
@@ -37,20 +39,10 @@ public class VideoController {
     private String port;
     @Value("${server.servlet.context-path}")
     private String contextPath;
-
-
-    /**
-     * @MethodName getPreviewUrl
-     * @Description 获取在线预览视频的 url 地址
-     * @Author travis-wei
-     * @Data 2023/4/24
-     * @param sourceId
-     * @Return java.lang.String
-     **/
-    @GetMapping("/getvideourl")
-    public String getPreviewUrl(@RequestParam("sourceId") String sourceId) {
-        return "http://" + customIp + ":" + port + contextPath + "/hlsvideo/video?sourceId=" + sourceId;
-    }
+    @Value("${ffmpeg.keypath}")
+    private String keyPath;
+    @Value("${ffmpeg.getkeyapi}")
+    private String getKetApi;
 
 
     /**
@@ -63,11 +55,32 @@ public class VideoController {
      * @Return void
      **/
     @GetMapping("/video")
-    public void getVideo(@RequestParam("sourceId") String sourceId, HttpServletResponse response) throws IOException {
+    public void getVideo(@RequestParam("sourceId") String sourceId, @RequestParam("token") String token, HttpServletResponse response) throws IOException {
+        // TODO （更改 m3u8 文件）将 token 拼接到 m3u8 uri 后，web 在接收到 m3u8 后携带 token 去给定的 uri 获取密钥
         String filePath = videoFilePath + sourceId + "/" + sourceId + ".m3u8";
         FileReader fileReader = new FileReader(filePath);
-        log.info(filePath);
-        fileReader.writeToStream(response.getOutputStream());
+
+        BufferedReader bufIn = new BufferedReader(fileReader.getReader());
+        // 内存流, 作为临时流
+        CharArrayWriter tempStream = new CharArrayWriter();
+        // 替换
+        String line = null;
+        while ( (line = bufIn.readLine()) != null) {
+            // 替换每行中, 符合条件的字符串
+            line = line.replaceAll("&token=", "&token=" + token);
+            // 将该行写入内存
+            tempStream.write(line);
+            // 添加换行符
+            tempStream.append(System.getProperty("line.separator"));
+        }
+        // 关闭 输入流
+        bufIn.close();
+
+        String tempStreamString = tempStream.toString();
+        log.info("tempStreamString:" + tempStreamString);
+
+        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(tempStreamString.getBytes());
+        IoUtil.copy(byteArrayInputStream, response.getOutputStream());
     }
 
     @GetMapping("/ts")
@@ -117,6 +130,48 @@ public class VideoController {
         String suffix = originalFilename.substring(originalFilename.lastIndexOf(".") + 1);
         // 创建文件夹（文件路径中已经包含了gridFsId）
         String dirPath = createDir(gridFsId);
+
+        // 创建视频加密 所对应的 key 文件
+        // 密钥文件路径
+        String keyFilePath = keyPath + gridFsId + ".key";
+        String keyFileFfmpegPath = keyPath + gridFsId + ".keyinfo";
+
+        // 密钥 字符串
+        String secretKey = IdUtil.simpleUUID();
+        String iv = IdUtil.simpleUUID();
+        byte[] secretKeyByte = secretKey.getBytes();
+        File fileFfmpeg;
+        try {
+            File file = new File(keyFilePath);
+            fileFfmpeg = new File(keyFileFfmpegPath);
+            // 如果密钥文件不存在，则创建新文件
+            if (!file.exists()) {
+                file.createNewFile();
+                fileFfmpeg.createNewFile();
+            } else {
+                throw new RuntimeException("密钥文件已经存在！");
+            }
+            FileOutputStream outStream = new FileOutputStream(file);
+            outStream.write(secretKeyByte);
+            outStream.close();
+        } catch (Exception e) {
+            log.error(e.toString());
+            return e.getMessage();
+        }
+        // TODO 将密钥字符串存入数据库
+
+        // TODO 修改 keyinfo 文件
+        String keyInfoContent = getKetApi + gridFsId + "&token=" + "\n" + keyFilePath + "\n" + iv;
+        byte[] keyInfoContentByte = keyInfoContent.getBytes();
+        try {
+            FileOutputStream outputStream = new FileOutputStream(fileFfmpeg);
+            outputStream.write(keyInfoContentByte);
+            outputStream.close();
+        } catch (Exception e) {
+            log.error(e.toString());
+            return e.getMessage();
+        }
+
 
         // 临时存储的文件路径
         String tempPath = videoFilePath + originalFilename;
