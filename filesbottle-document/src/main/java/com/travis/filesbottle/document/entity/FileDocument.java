@@ -106,6 +106,10 @@ public class FileDocument extends Model<FileDocument> {
     @TableField("doc_property")
     private String docProperty;
 
+    @ApiModelProperty("视频文件加密密钥")
+    @TableField("doc_enc_key")
+    private String docEncKey;
+
     public static final String DOC_ZZID = "doc_zzid";
 
     public static final String DOC_NAME = "doc_name";
@@ -143,6 +147,8 @@ public class FileDocument extends Model<FileDocument> {
     public static final String DOC_TEAMID = "doc_teamid";
 
     public static final String DOC_PROPERTY = "doc_property";
+
+    public static final String DOC_ENC_KEY = "doc_enc_key";
 
     @Override
     public Serializable pkVal() {

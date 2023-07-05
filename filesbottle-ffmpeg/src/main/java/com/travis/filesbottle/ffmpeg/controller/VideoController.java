@@ -4,7 +4,9 @@ import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.io.file.FileReader;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
+import com.travis.filesbottle.common.dubboservice.document.DubboDocEncKeyService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.dubbo.config.annotation.DubboReference;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
@@ -44,6 +46,9 @@ public class VideoController {
     @Value("${ffmpeg.getkeyapi}")
     private String getKetApi;
 
+    @DubboReference
+    private DubboDocEncKeyService dubboDocEncKeyService;
+
 
     /**
      * @MethodName getVideo
@@ -56,7 +61,7 @@ public class VideoController {
      **/
     @GetMapping("/video")
     public void getVideo(@RequestParam("sourceId") String sourceId, @RequestParam("token") String token, HttpServletResponse response) throws IOException {
-        // TODO （更改 m3u8 文件）将 token 拼接到 m3u8 uri 后，web 在接收到 m3u8 后携带 token 去给定的 uri 获取密钥
+        // TODO 【待测试】（更改 m3u8 文件）将 token 拼接到 m3u8 uri 后，web 在接收到 m3u8 后携带 token 去给定的 uri 获取密钥
         String filePath = videoFilePath + sourceId + "/" + sourceId + ".m3u8";
         FileReader fileReader = new FileReader(filePath);
 
@@ -158,9 +163,11 @@ public class VideoController {
             log.error(e.toString());
             return e.getMessage();
         }
-        // TODO 将密钥字符串存入数据库
+        // 将密钥字符串存入数据库
+        boolean insertedDocEncKey = dubboDocEncKeyService.insertDocEncKey(gridFsId, secretKey);
+        if (!insertedDocEncKey) return null;
 
-        // TODO 修改 keyinfo 文件
+        // 修改 keyinfo 文件
         String keyInfoContent = getKetApi + gridFsId + "&token=" + "\n" + keyFilePath + "\n" + iv;
         byte[] keyInfoContentByte = keyInfoContent.getBytes();
         try {
@@ -171,7 +178,6 @@ public class VideoController {
             log.error(e.toString());
             return e.getMessage();
         }
-
 
         // 临时存储的文件路径
         String tempPath = videoFilePath + originalFilename;

@@ -1,9 +1,11 @@
 package com.travis.filesbottle.document.thread;
 
 import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.travis.filesbottle.common.constant.DocumentConstants;
 import com.travis.filesbottle.common.dubboservice.ffmpeg.DubboFfmpegService;
+import com.travis.filesbottle.common.utils.R;
 import com.travis.filesbottle.document.entity.FileDocument;
 import com.travis.filesbottle.document.entity.bo.EsDocument;
 import com.travis.filesbottle.document.service.DocumentService;
@@ -78,11 +80,15 @@ public class TaskVideoConvertServiceImpl implements TaskConvertService{
         multiValueMap.add("file", multipartFile.getResource());
 
         // 通过 dubbo 远程获取 ffmpeg 服务器上传视频文件的 URL 地址
-        String handleUrl = dubboFfmpegService.getHandleUrl();
+        R<?> handleUrlResult = dubboFfmpegService.getHandleUrl();
+        if (!R.checkSuccess(handleUrlResult)) {
+            throw new RuntimeException("获取 ffmpeg 上传视频文件 URL 地址失败！");
+        }
+        String handleUrl = (String) handleUrlResult.getData();
         log.info(handleUrl);
 
         String result = restTemplate.postForObject(handleUrl, multiValueMap, String.class);
-        if (!result.equals(fileDocument.getDocGridfsId())) {
+        if (!StrUtil.isEmpty(result) && !fileDocument.getDocGridfsId().equals(result)) {
             throw new Exception("FFMPEG 视频上传，切片失败！");
         }
         return null;

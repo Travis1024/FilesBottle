@@ -35,7 +35,7 @@ public interface DocumentService extends IService<FileDocument> {
      * @param sourceId
      * @return
      */
-    R<?> getPreviewDocStream(String sourceId);
+    R<?> getPreviewDocStream(String sourceId, String userId);
 
     /**
      * 为controller提供源文件下载的服务

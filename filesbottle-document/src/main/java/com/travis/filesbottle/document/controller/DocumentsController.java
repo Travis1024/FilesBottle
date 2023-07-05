@@ -103,8 +103,8 @@ public class DocumentsController {
 
     @ApiOperation(value = "获取预览文件，maybe 不支持在线预览｜pdf在线预览｜源文件在线预览｜kkFileView的url在线预览")
     @GetMapping("/stream/preview")
-    public R<?> getPreviewStream(@RequestParam("sourceId") String sourceId) throws UnsupportedEncodingException {
-        R<?> previewDocStream = documentService.getPreviewDocStream(sourceId);
+    public R<?> getPreviewStream(@RequestParam("sourceId") String sourceId, HttpServletRequest request) throws UnsupportedEncodingException {
+        R<?> previewDocStream = documentService.getPreviewDocStream(sourceId, request.getHeader("userId"));
         if (!BizCodeUtil.isCodeSuccess(previewDocStream.getCode())) {
             // 返回失败的响应结果
             return previewDocStream;

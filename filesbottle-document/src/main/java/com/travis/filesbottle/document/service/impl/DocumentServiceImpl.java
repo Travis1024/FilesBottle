@@ -276,7 +276,7 @@ public class DocumentServiceImpl extends ServiceImpl<DocumentMapper, FileDocumen
      * @Return com.travis.filesbottle.common.utils.R<?>
      **/
     @Override
-    public R<?> getPreviewDocStream(String sourceId) {
+    public R<?> getPreviewDocStream(String sourceId, String userId) {
 
         // 一、首先查找该源文件信息是否存在，如果不存在直接返回文件不存在的error信息
         FileDocument fileDocument = getFileDocumentBySourceId(sourceId);
@@ -325,8 +325,12 @@ public class DocumentServiceImpl extends ServiceImpl<DocumentMapper, FileDocumen
             downloadDocument.setDocSuffix(fileDocument.getDocSuffix());
             downloadDocument.setDocFileTypeCode(fileDocument.getDocFileTypeCode());
             downloadDocument.setDocDescription(fileDocument.getDocDescription());
+
             // 通过 dubbo 远程获取 ffmpeg 服务器提供的视频预览的url
-            String videoUrl = dubboFfmpegService.getVideoUrl(sourceId);
+            String videoUrl = dubboFfmpegService.getVideoUrl(sourceId, userId);
+            if (StrUtil.isEmpty(videoUrl)) {
+                return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.UNKNOW, "获取 ffmpeg 服务器提供的视频预览的url失败！");
+            }
             downloadDocument.setPreviewUrl(videoUrl);
 
         } else if (typeCode >= 401 && typeCode <= 600) {

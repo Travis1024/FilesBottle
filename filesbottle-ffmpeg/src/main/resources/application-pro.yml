@@ -35,7 +35,7 @@ ffmpeg:
   path: /usr/bin/ffmpeg
   filepath: /home/travis/hlsvideo/
   keypath: /home/travis/filesbottle/key/
-  getkeyapi: http://140.246.171.8:48081/api/auth/ffmpeg/getkey?asset_id=
+  getkeyapi: http://140.246.171.8:48081/api/auth/ffmpeg/getkey?gridFsId=
 
 
 

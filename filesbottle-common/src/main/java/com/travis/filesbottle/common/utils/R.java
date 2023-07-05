@@ -35,9 +35,9 @@ public class R<T> implements Serializable {
         return new R().setCode(pair.getKey()).setMessage(pair.getValue());
     }
 
-    public static R success(String message) {
-        return new R().setCode(BizCodeEnum.buildSuccessCode().getKey()).setMessage(message);
-    }
+    // public static R success(String message) {
+    //     return new R().setCode(BizCodeEnum.buildSuccessCode().getKey()).setMessage(message);
+    // }
 
     public static <T> R success(T data) {
         return R.success().setData(data);
