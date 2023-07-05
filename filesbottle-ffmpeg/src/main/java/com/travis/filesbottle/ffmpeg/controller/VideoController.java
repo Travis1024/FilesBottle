@@ -251,6 +251,11 @@ public class VideoController {
             ffmpeg.addArgument("-2");
             ffmpeg.addArgument("-f");
             ffmpeg.addArgument("hls");
+
+            // 指定 keyinfo 文件
+            ffmpeg.addArgument("-hls_key_info_file");
+            ffmpeg.addArgument(keyFileFfmpegPath);
+
             // 设置 ts文件的网络路径信息（Nginx 路径）
             ffmpeg.addArgument("-hls_base_url");
             ffmpeg.addArgument(nginxBaseUrl);
