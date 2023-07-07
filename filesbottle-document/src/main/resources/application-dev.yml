@@ -21,7 +21,7 @@ minio:
   accessKey: C287SNHNB8UCLPAR1LIP
   secretKey: 9rhhZJ5ZK2QBrg6lxfobxLjXXVlBst7Pn8XtRU8U
   bucketName: filesbottle
-  # 分片上传有效期: 秒
+  # 分片上传有效期: 秒（43200：12 小时）
   chunk-upload-expiry-second: 43200
 
 

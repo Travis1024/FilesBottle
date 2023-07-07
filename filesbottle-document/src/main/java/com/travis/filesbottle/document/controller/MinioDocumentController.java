@@ -4,6 +4,8 @@ import cn.hutool.core.util.StrUtil;
 import com.travis.filesbottle.common.enums.BizCodeEnum;
 import com.travis.filesbottle.common.utils.R;
 import com.travis.filesbottle.document.entity.FileDocument;
+import com.travis.filesbottle.document.entity.bo.MinioGetUploadInfoParam;
+import com.travis.filesbottle.document.service.MinioDocumentService;
 import com.travis.filesbottle.document.utils.CustomMinioAsyncClient;
 import com.travis.filesbottle.document.utils.MinioProperties;
 import io.minio.CreateMultipartUploadResponse;
@@ -12,10 +14,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
@@ -43,8 +42,10 @@ public class MinioDocumentController {
     private MinioClient minioClient;
     @Autowired
     private CustomMinioAsyncClient minioAsyncClient;
+    @Autowired
+    private MinioDocumentService minioDocumentService;
 
-    @ApiOperation(value = "表单向 minio 上传文件")
+    @ApiOperation(value = "表单向 minio 上传文件（单个文件，无需分片）")
     @PostMapping("/upload")
     public R<?> minioDocUpload(@RequestParam("file") MultipartFile file, @RequestParam("property") String property, @RequestParam("description") String description, HttpServletRequest request) {
         String userId = request.getHeader(USER_ID);
@@ -66,6 +67,16 @@ public class MinioDocumentController {
         }
         return R.success("文件上传成功！", fileDocument);
 
+    }
+
+    @ApiOperation(value = "获取上传 url 等参数")
+    public R<?> minioGetUploadId(@RequestBody MinioGetUploadInfoParam infoParam) {
+        try {
+            return minioDocumentService.minioGetUploadId(infoParam);
+        } catch (Exception e) {
+            log.error(e.toString());
+            return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.UNKNOW, e.getMessage());
+        }
     }
 
 }

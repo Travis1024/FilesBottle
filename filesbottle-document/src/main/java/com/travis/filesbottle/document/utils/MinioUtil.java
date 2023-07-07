@@ -11,9 +11,7 @@ import io.minio.CreateMultipartUploadResponse;
 import io.minio.GetPresignedObjectUrlArgs;
 import io.minio.ListPartsResponse;
 import io.minio.ObjectWriteResponse;
-import io.minio.errors.InsufficientDataException;
-import io.minio.errors.InternalException;
-import io.minio.errors.XmlParserException;
+import io.minio.errors.*;
 import io.minio.http.Method;
 import io.minio.messages.Part;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +27,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 /**
  * @ClassName MinioUtil
@@ -55,47 +54,36 @@ public class MinioUtil {
      * @param contentType
      * @Return void
      **/
-    public MinioUploadInfo initMultiPartUpload(String objectName, int partCount, String contentType) {
+    public MinioUploadInfo initMultiPartUpload(String objectName, int partCount, String contentType) throws InsufficientDataException, IOException, NoSuchAlgorithmException, ExecutionException, InvalidKeyException, InterruptedException, XmlParserException, InternalException, ServerException, ErrorResponseException, InvalidResponseException {
 
         List<String> urlList = new ArrayList<>();
-        String uploadId = null;
-
         Multimap<String, String> headers = ArrayListMultimap.create();
         headers.put("Content-Type", contentType);
 
         // 获取 uploadId
-        try {
-            uploadId = this.getUploadId(minioProperties.getBucketName(), null, objectName, headers, null);
-        } catch (Exception e) {
-            log.error(e.toString());
-        }
+        String uploadId = this.getUploadId(minioProperties.getBucketName(), null, objectName, headers, null);
 
         // 获取上传 urlList
         HashMap<String, String> paramsMap = new HashMap<>(2);
         paramsMap.put("uploadId", uploadId);
-        try {
-            for (int i = 1; i <= partCount; i++) {
-                paramsMap.put("partNumber", String.valueOf(i));
-                String uploadUrl = minioAsyncClient.getPresignedObjectUrl(
-                        GetPresignedObjectUrlArgs.builder()
-                                .method(Method.GET)
-                                .bucket(minioProperties.getBucketName())
-                                .object(objectName)
-                                // 指定上传链接有效期
-                                .expiry(minioProperties.getChunkUploadExpirySecond())
-                                // paramsMap包含两项（uploadId:固定，partNumber:变化）
-                                .extraQueryParams(paramsMap)
-                                .build()
-                );
 
-                urlList.add(uploadUrl);
-            }
-
-        } catch (Exception e) {
-            log.error(e.toString());
-            throw new RuntimeException(e.getMessage());
+        for (int i = 1; i <= partCount; i++) {
+            paramsMap.put("partNumber", String.valueOf(i));
+            String uploadUrl = minioAsyncClient.getPresignedObjectUrl(
+                    GetPresignedObjectUrlArgs.builder()
+                            .method(Method.GET)
+                            .bucket(minioProperties.getBucketName())
+                            .object(objectName)
+                            // 指定上传链接有效期
+                            .expiry(minioProperties.getChunkUploadExpirySecond())
+                            // paramsMap包含两项（uploadId:固定，partNumber:变化）
+                            .extraQueryParams(paramsMap)
+                            .build()
+            );
+            urlList.add(uploadUrl);
         }
 
+        // 计算过期时间 + 封装结果
         LocalDateTime expireTime = LocalDateTimeUtil.offset(LocalDateTime.now(), minioProperties.getChunkUploadExpirySecond(), ChronoUnit.SECONDS);
         MinioUploadInfo minioUploadInfo = new MinioUploadInfo();
         minioUploadInfo.setUploadId(uploadId);
@@ -103,6 +91,7 @@ public class MinioUtil {
         minioUploadInfo.setUrlList(urlList);
         return minioUploadInfo;
     }
+
 
     /**
      * @MethodName mergeUploadParts
@@ -114,6 +103,7 @@ public class MinioUtil {
      * @Return java.lang.String
      **/
     public String mergeUploadParts(String objectName, String uploadId) throws InsufficientDataException, IOException, NoSuchAlgorithmException, InvalidKeyException, XmlParserException, InternalException, ExecutionException, InterruptedException {
+        // 根据 uploadId 查询 part 列表
         CompletableFuture<ListPartsResponse> completableFuture = minioAsyncClient.listPartsAsync(minioProperties.getBucketName(), null, objectName, null, 0, uploadId, null, null);
         ListPartsResponse listPartsResponse = completableFuture.get();
         if (listPartsResponse == null) {
@@ -124,21 +114,37 @@ public class MinioUtil {
         for (int index = 0; index < listPartsResponse.result().partList().size(); index++) {
             parts[index] = new Part(index + 1, listPartsResponse.result().partList().get(index).etag());
         }
-        ObjectWriteResponse objectWriteResponse = null;
-        try {
-            CompletableFuture<ObjectWriteResponse> uploadAsync = minioAsyncClient.completeMultipartUploadAsync(minioProperties.getBucketName(), null, objectName, uploadId, parts, null, null);
-            objectWriteResponse = uploadAsync.get();
-        } catch (Exception e) {
-            log.error(e.toString());
-            throw new RuntimeException(e.getMessage());
-        }
+
+        // 发送文件合并请求
+        CompletableFuture<ObjectWriteResponse> uploadAsync = minioAsyncClient.completeMultipartUploadAsync(minioProperties.getBucketName(), null, objectName, uploadId, parts, null, null);
+        ObjectWriteResponse objectWriteResponse = uploadAsync.get();
         if (objectWriteResponse == null) {
             log.error("合并失败，合并结果为空！");
             throw new RuntimeException("文件合并失败！");
         }
+
         return objectWriteResponse.region();
     }
 
+
+    /**
+     * @MethodName listUploadChunkList
+     * @Description 获取已上传的文件列表
+     * @Author travis-wei
+     * @Data 2023/7/7
+     * @param objectName
+     * @param uploadId
+     * @Return java.util.List<java.lang.Integer>
+     **/
+    public List<Integer> listUploadChunkList(String objectName, String uploadId) throws InsufficientDataException, IOException, NoSuchAlgorithmException, InvalidKeyException, XmlParserException, InternalException, ExecutionException, InterruptedException {
+        // 根据 uploadId 查询 part 列表
+        CompletableFuture<ListPartsResponse> completableFuture = minioAsyncClient.listPartsAsync(minioProperties.getBucketName(), null, objectName, null, 0, uploadId, null, null);
+        ListPartsResponse listPartsResponse = completableFuture.get();
+        if (listPartsResponse == null) {
+            return Collections.emptyList();
+        }
+        return listPartsResponse.result().partList().stream().map(Part::partNumber).collect(Collectors.toList());
+    }
 
 
     /**
