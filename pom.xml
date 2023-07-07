@@ -71,6 +71,7 @@
         <spring.mock.version>2.0.8</spring.mock.version>
         <java.all.deps.version>3.3.1</java.all.deps.version>
         <rocketmq.version>2.2.2</rocketmq.version>
+        <minio.version>8.5.4</minio.version>
 
     </properties>
 
@@ -394,6 +395,12 @@
                 <groupId>org.apache.rocketmq</groupId>
                 <artifactId>rocketmq-spring-boot-starter</artifactId>
                 <version>${rocketmq.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.minio</groupId>
+                <artifactId>minio</artifactId>
+                <version>${minio.version}</version>
             </dependency>
 
         </dependencies>

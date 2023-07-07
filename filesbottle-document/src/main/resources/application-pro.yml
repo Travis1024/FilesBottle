@@ -23,6 +23,16 @@ ffmpeg:
   filepath: /Users/travis/Desktop/FilesBottle_Project/video
 
 
+--- # minio 配置
+minio:
+  endpoint: http://140.246.171.8:9000
+  accessKey: C287SNHNB8UCLPAR1LIP
+  secretKey: 9rhhZJ5ZK2QBrg6lxfobxLjXXVlBst7Pn8XtRU8U
+  bucketName: filesbottle
+  # 分片上传有效期: 秒
+  chunk-upload-expiry-second: 43200
+
+
 --- # kkFileView文件访问路径的前缀信息, 后续需要使用nginx进行代理
 kkfileview:
   project:
