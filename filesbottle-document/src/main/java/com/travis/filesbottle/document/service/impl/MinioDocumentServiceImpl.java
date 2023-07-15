@@ -47,7 +47,6 @@ public class MinioDocumentServiceImpl extends ServiceImpl<DocumentMapper, FileDo
 
         if (minioUploadInfo != null) {
             // TODO
-
         }
         return R.success(minioUploadInfo);
     }
