@@ -16,9 +16,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
@@ -47,6 +45,8 @@ public class MinioDocumentServiceImpl extends ServiceImpl<DocumentMapper, FileDo
 
         if (minioUploadInfo != null) {
             // TODO
+            Map<Object, Object> hashMap = new HashMap<>();
+            hashMap.getOrDefault()
         }
         return R.success(minioUploadInfo);
     }
