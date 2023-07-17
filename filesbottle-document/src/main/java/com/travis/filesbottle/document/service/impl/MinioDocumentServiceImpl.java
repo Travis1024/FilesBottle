@@ -9,6 +9,7 @@ import com.travis.filesbottle.document.mapper.DocumentMapper;
 import com.travis.filesbottle.document.service.MinioDocumentService;
 import com.travis.filesbottle.document.utils.MinioUtil;
 import io.minio.errors.*;
+import io.swagger.models.auth.In;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -45,8 +46,13 @@ public class MinioDocumentServiceImpl extends ServiceImpl<DocumentMapper, FileDo
 
         if (minioUploadInfo != null) {
             // TODO
-            Map<Object, Object> hashMap = new HashMap<>();
-            hashMap.getOrDefault()
+            Map<Long, Integer> hashMap = new HashMap<>();
+            int a = 9;
+            long aLong = 9 - 1;
+            System.out.println(aLong - a);
+            long c = aLong - a;
+            hashMap.put((long) a, 0);
+            hashMap.getOrDefault();
         }
         return R.success(minioUploadInfo);
     }
