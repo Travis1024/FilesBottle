@@ -46,13 +46,6 @@ public class MinioDocumentServiceImpl extends ServiceImpl<DocumentMapper, FileDo
 
         if (minioUploadInfo != null) {
             // TODO
-            Map<Long, Integer> hashMap = new HashMap<>();
-            int a = 9;
-            long aLong = 9 - 1;
-            System.out.println(aLong - a);
-            long c = aLong - a;
-            hashMap.put((long) a, 0);
-            hashMap.getOrDefault();
         }
         return R.success(minioUploadInfo);
     }
