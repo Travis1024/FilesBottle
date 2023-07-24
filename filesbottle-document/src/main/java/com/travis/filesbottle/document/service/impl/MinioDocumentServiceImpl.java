@@ -9,7 +9,6 @@ import com.travis.filesbottle.document.mapper.DocumentMapper;
 import com.travis.filesbottle.document.service.MinioDocumentService;
 import com.travis.filesbottle.document.utils.MinioUtil;
 import io.minio.errors.*;
-import io.swagger.models.auth.In;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,9 +16,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.util.*;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
 
 /**
  * @ClassName MinioDocumentServiceImpl
@@ -43,10 +40,11 @@ public class MinioDocumentServiceImpl extends ServiceImpl<DocumentMapper, FileDo
         // 计算需要分片的数量，向上取整
         double partCount = Math.ceil(infoParam.getFileSize() / infoParam.getChunkSize());
         MinioUploadInfo minioUploadInfo = minioUtil.initMultiPartUpload(infoParam.getFileName(), (int) partCount, infoParam.getContentType());
-
-        if (minioUploadInfo != null) {
-            // TODO
-        }
         return R.success(minioUploadInfo);
+    }
+
+    @Override
+    public R<?> minioCheckFileByMd5(String md5) {
+
     }
 }

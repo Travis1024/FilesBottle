@@ -22,4 +22,5 @@ public interface MinioDocumentService extends IService<FileDocument> {
 
     R<?> minioGetUploadId(MinioGetUploadInfoParam infoParam) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, ExecutionException, InvalidKeyException, InterruptedException, XmlParserException, InvalidResponseException, InternalException;
 
+    R<?> minioCheckFileByMd5(String md5);
 }

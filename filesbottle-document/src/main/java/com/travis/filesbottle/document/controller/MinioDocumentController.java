@@ -69,7 +69,8 @@ public class MinioDocumentController {
 
     }
 
-    @ApiOperation(value = "获取上传 url 等参数")
+    @ApiOperation(value = "获取上传 url 等参数 (文件分片)")
+    @PostMapping("/getUploadInfo")
     public R<?> minioGetUploadId(@RequestBody MinioGetUploadInfoParam infoParam) {
         try {
             return minioDocumentService.minioGetUploadId(infoParam);
@@ -77,6 +78,13 @@ public class MinioDocumentController {
             log.error(e.toString());
             return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.UNKNOW, e.getMessage());
         }
+    }
+
+    @ApiOperation(value = "通过文件 MD5 校验文件是否存在")
+    @GetMapping("/checkFile")
+    public R<?> minioCheckFileByMd5(@RequestParam("md5") String md5) {
+        R<?> checkFileByMd5Result = minioDocumentService.minioCheckFileByMd5(md5);
+        if (!)
     }
 
 }

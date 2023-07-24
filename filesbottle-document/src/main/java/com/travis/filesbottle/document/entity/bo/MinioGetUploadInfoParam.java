@@ -4,7 +4,7 @@ import lombok.Data;
 
 /**
  * @ClassName GetMinioUploadInfoParam
- * @Description TODO
+ * @Description minio 请求分片上传文件的请求参数
  * @Author travis-wei
  * @Version v1.0
  * @Data 2023/7/7
