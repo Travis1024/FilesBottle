@@ -2,7 +2,7 @@
 # 设置当前模块服务名称
 spring:
   application:
-    name: minio-server
+    name: document-server
 
 # 设置启动端口号
 server:

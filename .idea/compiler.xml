@@ -15,6 +15,7 @@
         <module name="filesbottle-common" />
         <module name="filesbottle-ffmpeg" />
         <module name="filesbottle-member" />
+        <module name="filesbottle-minio" />
         <module name="filesbottle-report" />
         <module name="filesbottle-wxm" />
         <module name="filesbottle-document" />

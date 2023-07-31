@@ -1,8 +1,0 @@
-spring:
-  profiles:
-    active: dev
-
-  # Springfox 使用的路径匹配是基于AntPathMatcher的，而Spring Boot 2.6.X使用的是PathPatternMatcher, 所以需要在配置中修改路径匹配
-  mvc:
-    pathmatch:
-      matching-strategy: ant_path_matcher

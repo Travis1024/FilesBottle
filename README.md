@@ -97,6 +97,7 @@
   | filesbottle-member   | 人员管理模块                       | filesbottle-ums | 48083    |
   | filesbottle-wxm      | 微信公众号模块                     |                 |          |
   | filesbottle-document | 文件管理模块                       | filesbottle-dms | 48082    |
+  | filesbottle-document | Minio—文件管理模块                 | filesbottle-dms | 48084    |
   | filesbottle-auth     | 登录管理模块                       |                 | 48081    |
   | filesbottle-ffmpeg   | ffmpeg视频转码切片模块（单独部署） |                 | 48086    |
   | filesbottle-knife4j  | knife4文档聚合模块                 |                 | 48079    |

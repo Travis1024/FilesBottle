@@ -16,6 +16,9 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -45,6 +48,6 @@ public class MinioDocumentServiceImpl extends ServiceImpl<DocumentMapper, FileDo
 
     @Override
     public R<?> minioCheckFileByMd5(String md5) {
-
+        return null;
     }
 }

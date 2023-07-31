@@ -23,6 +23,7 @@
         <module>filesbottle-auth</module>
         <module>filesbottle-knife4j</module>
         <module>filesbottle-ffmpeg</module>
+        <module>filesbottle-minio</module>
     </modules>
 
 

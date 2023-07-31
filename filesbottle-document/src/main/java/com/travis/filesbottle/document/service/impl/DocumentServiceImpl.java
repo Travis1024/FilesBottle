@@ -217,7 +217,7 @@ public class DocumentServiceImpl extends ServiceImpl<DocumentMapper, FileDocumen
             // 增加个人文档数量
             dubboDocUpdateDataService.updateUserDocNumber(userId, property, "1");
             // 增加团队文档数量
-            dubboDocUpdateDataService.updateTeamDocNumber(userId, property, "1");
+            dubboDocUpdateDataService.updateTeamDocNumber(teamId, property, "1");
 
         } catch (Exception e) {
             log.error(e.getMessage());

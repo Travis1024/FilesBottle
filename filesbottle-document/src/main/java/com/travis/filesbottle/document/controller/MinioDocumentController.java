@@ -66,7 +66,6 @@ public class MinioDocumentController {
 
         }
         return R.success("文件上传成功！", fileDocument);
-
     }
 
     @ApiOperation(value = "获取上传 url 等参数 (文件分片)")
@@ -84,7 +83,7 @@ public class MinioDocumentController {
     @GetMapping("/checkFile")
     public R<?> minioCheckFileByMd5(@RequestParam("md5") String md5) {
         R<?> checkFileByMd5Result = minioDocumentService.minioCheckFileByMd5(md5);
-        if (!)
+        return null;
     }
 
 }

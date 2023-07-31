@@ -107,6 +107,7 @@
                     <!-- 指定该Main Class为全局的唯一入口 -->
                     <mainClass>com.travis.filesbottle.ffmpeg.FfmpegApplication</mainClass>
                     <layout>ZIP</layout>
+                    <includeSystemScope>true</includeSystemScope>
                 </configuration>
                 <executions>
                     <execution>
