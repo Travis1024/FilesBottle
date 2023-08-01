@@ -63,7 +63,7 @@ public class MinioController {
             if (!R.checkSuccess(result)) return result;
             document = (Document) result.getData();
             // 异步执行生成预览文件、更新 mysql 数据、更新 ElasticSearch 数据的任务
-            taskExecuteService.generatePreviewFile(document, file);
+            taskExecuteService.generatePreviewFile(file.getSize(), document, file.getInputStream());
 
         } catch (Exception e) {
             log.error(e.toString());

@@ -12,7 +12,6 @@ import com.travis.filesbottle.minio.entity.Document;
 import com.travis.filesbottle.minio.entity.Minio;
 import com.travis.filesbottle.minio.entity.bo.MinioGetUploadInfoParam;
 import com.travis.filesbottle.minio.entity.bo.MinioUploadInfo;
-import com.travis.filesbottle.minio.enums.FileTypeEnum;
 import com.travis.filesbottle.minio.mapper.MinioMapper;
 import com.travis.filesbottle.minio.service.DocumentService;
 import com.travis.filesbottle.minio.service.MinioService;
@@ -78,6 +77,18 @@ public class MinioServiceImpl extends ServiceImpl<MinioMapper, Minio> implements
         return null;
     }
 
+    /**
+     * @MethodName uploadSingleDoc
+     * @Description 向 minio 文件系统中上传单个文件
+     * @Author travis-wei
+     * @Data 2023/7/31
+     * @param userId
+     * @param userName
+     * @param property
+     * @param description
+     * @param file
+     * @Return com.travis.filesbottle.common.utils.R<?>
+     **/
     @Override
     public R<?> uploadSingleDoc(String userId, String userName, String property, String description, MultipartFile file) throws IOException, InsufficientDataException, NoSuchAlgorithmException, InvalidKeyException, XmlParserException, InternalException, ExecutionException, InterruptedException {
         /**
@@ -122,7 +133,9 @@ public class MinioServiceImpl extends ServiceImpl<MinioMapper, Minio> implements
         document.setDocFileTypeCode(FileTypeEnumUtil.getCodeBySuffix(suffix));
         document.setDocSuffix(suffix);
         document.setDocDescription(description);
-        document.setDocMinioId(IdUtil.randomUUID());
+        // 为 minio 文件获取 uuid
+        String minioId = IdUtil.randomUUID();
+        document.setDocMinioId(minioId);
         document.setDocContentTypeText(file.getContentType());
         document.setDocUserid(userId);
         document.setDocTeamid(userInfo.getUserTeamId());
@@ -134,7 +147,7 @@ public class MinioServiceImpl extends ServiceImpl<MinioMapper, Minio> implements
         CompletableFuture<ObjectWriteResponse> completableFuture = minioAsyncClient.putObject(
                 PutObjectArgs.builder()
                         .bucket(minioProperties.getBucketName())
-                        .object(file.getOriginalFilename())
+                        .object(minioId)
                         .stream(file.getInputStream(), file.getSize(), -1)
                         .contentType(file.getContentType())
                         .build()
@@ -163,6 +176,7 @@ public class MinioServiceImpl extends ServiceImpl<MinioMapper, Minio> implements
 
         return R.success("文件上传成功！", document);
     }
+
 
     /**
      * @MethodName updateMysqlDataWhenUpload

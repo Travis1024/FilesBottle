@@ -70,6 +70,10 @@ public class Document extends Model<Document> {
     @TableField("doc_minio_id")
     private String docMinioId;
 
+    @ApiModelProperty("文档 minio 预览文件的 uuid")
+    @TableField("doc_preview_id")
+    private String docPreviewId;
+
     @ApiModelProperty("kkFileView提供的预览URL")
     @TableField("doc_preview_url")
     private String docPreviewUrl;
@@ -125,6 +129,8 @@ public class Document extends Model<Document> {
     public static final String DOC_DESCRIPTION = "doc_description";
 
     public static final String DOC_MINIO_ID = "doc_minio_id";
+
+    public static final String DOC_PREVIEW_ID = "doc_preview_id";
 
     public static final String DOC_PREVIEW_URL = "doc_preview_url";
 

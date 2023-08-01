@@ -18,3 +18,8 @@ spring:
           uri: lb://member-server
           predicates:
             - Path=/api/member/**
+        - id: kkFileView-server
+          uri: http://140.246.171.8:8012
+          predicates:
+            - Path=/onlinePreview
+            - Query=url
