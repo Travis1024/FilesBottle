@@ -43,6 +43,8 @@ public class TaskExecuteServiceImpl implements TaskExecuteService {
     private String kkProjectUrlPrefix;
     @Value("${ffmpeg.filepath}")
     private String ffmpegFilePath;
+    @Value("${kkfileview.preview.gatewayUrlPrefix}")
+    private String kkGatewayPreviewPrefix;
 
     /**
      * @MethodName generatePreviewFile
@@ -64,7 +66,7 @@ public class TaskExecuteServiceImpl implements TaskExecuteService {
         if (type >= 1 && type <= 200) {
             taskConvertService = new TaskFileConvertPdfServiceImpl(fileSize, document, inputStream);
         } else if (type >= 401 && type <= 600){
-            taskConvertService = new TaskKKFileViewConvertServiceImpl(fileSize, document, inputStream, kkProjectUrlPrefix);
+            taskConvertService = new TaskKKFileViewConvertServiceImpl(fileSize, document, inputStream, kkProjectUrlPrefix, kkGatewayPreviewPrefix);
         } else if (type >= 351 && type <= 400) {
             // 处理视频文件
             taskConvertService = new TaskVideoConvertServiceImpl(fileSize, document, inputStream, ffmpegFilePath);

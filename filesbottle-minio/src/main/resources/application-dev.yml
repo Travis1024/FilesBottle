@@ -46,6 +46,7 @@ kkfileview:
     urlprefix: http://140.246.171.8:8012/
   preview:
     urlprefix: http://140.246.171.8:8012/onlinePreview
+    gatewayUrlPrefix: http://140.246.171.8:48080/onlinePreview?url=
   file:
     urlprefix: http://140.246.171.8:8012/demo/
   delete:
