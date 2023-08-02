@@ -42,6 +42,7 @@ public class CheckJwtAuthFilter implements GlobalFilter, Ordered {
 
     // 设置不需要鉴权的URL路径
     public static final List<String> ALLOW_PATH = new ArrayList<>(Arrays.asList("/api/auth/sso/login", "/knife4j", "/api/member/druid"));
+    public static final String KKFV_PREFIX = "/onlinePreview?url";
     public static final String USER_ID = "userId";
     public static final String USER_NAME = "username";
     public static final String FROM_SOURCE = "from-source";
@@ -92,6 +93,10 @@ public class CheckJwtAuthFilter implements GlobalFilter, Ordered {
         }
         String userId = jwtAuthResult.getData().getUserId();
         String username = jwtAuthResult.getData().getUserName();
+
+        // TODO kkFileView 预览请求拦截（检验当前用户是否和请求的文档属于同一团队）
+
+
         // 设置用户信息到请求
         addHeader(mutate, USER_ID, userId);
         addHeader(mutate, USER_NAME, username);

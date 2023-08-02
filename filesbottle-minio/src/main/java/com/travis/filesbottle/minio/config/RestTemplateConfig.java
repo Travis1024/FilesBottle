@@ -1,5 +1,6 @@
 package com.travis.filesbottle.minio.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.ClientHttpRequestFactory;
@@ -23,6 +24,7 @@ public class RestTemplateConfig {
     @Bean
     public ClientHttpRequestFactory clientHttpRequestFactory() {
         SimpleClientHttpRequestFactory simpleClientHttpRequestFactory = new SimpleClientHttpRequestFactory();
+        simpleClientHttpRequestFactory.setBufferRequestBody(false);
         // 设置超时时间，单位为毫秒（20 分钟）
         simpleClientHttpRequestFactory.setReadTimeout(1200000);
         // 设置连接超时时间，单位为毫秒

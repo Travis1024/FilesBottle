@@ -2,27 +2,22 @@ package com.travis.filesbottle.minio.thread;
 
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
-import com.itextpdf.xmp.impl.Base64;
 import com.travis.filesbottle.common.constant.DocumentConstants;
+import com.travis.filesbottle.common.dubboservice.ffmpeg.DubboFfmpegService;
+import com.travis.filesbottle.common.utils.R;
 import com.travis.filesbottle.minio.entity.Document;
 import com.travis.filesbottle.minio.entity.EsDocument;
-import com.travis.filesbottle.minio.mapper.DocumentMapper;
 import com.travis.filesbottle.minio.utils.ApplicationContextUtil;
 import io.minio.errors.InsufficientDataException;
 import io.minio.errors.InternalException;
 import io.minio.errors.XmlParserException;
-import io.seata.spring.annotation.GlobalTransactional;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.xcontent.XContentType;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.http.HttpEntity;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
@@ -34,80 +29,64 @@ import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.ExecutionException;
 
 /**
- * @ClassName TaskKKFileViewConvertServiceImpl
+ * @ClassName TaskVideoConvertServiceImpl
  * @Description TODO
  * @Author travis-wei
  * @Version v1.0
- * @Data 2023/8/1
+ * @Data 2023/8/2
  */
 @Slf4j
-public class TaskKKFileViewConvertServiceImpl implements TaskConvertService {
+public class TaskVideoConvertServiceImpl implements TaskConvertService {
 
-    private Long fileSize;
     private Document document;
     private InputStream inputStream;
-    private String kkProjectUrlPrefix;
-    private String kkGatewayPreviewPrefix;
-
+    private DubboFfmpegService dubboFfmpegService;
     private RestTemplate restTemplate;
     private RestHighLevelClient restHighLevelClient;
-    private DocumentMapper documentMapper;
 
-    public TaskKKFileViewConvertServiceImpl(Long fileSize, Document document, InputStream inputStream, String kkProjectUrlPrefix, String kkGatewayPreviewPrefix) {
-        this.fileSize = fileSize;
+    public TaskVideoConvertServiceImpl(Document document, InputStream inputStream) {
         this.document = document;
         this.inputStream = inputStream;
-        this.kkProjectUrlPrefix = kkProjectUrlPrefix;
-        this.kkGatewayPreviewPrefix = kkGatewayPreviewPrefix;
-
+        this.dubboFfmpegService = ApplicationContextUtil.getBean(DubboFfmpegService.class);
         this.restTemplate = ApplicationContextUtil.getBean(RestTemplate.class);
         this.restHighLevelClient = ApplicationContextUtil.getBean(RestHighLevelClient.class);
-        this.documentMapper = ApplicationContextUtil.getBean(DocumentMapper.class);
-
     }
 
-    /**
-     * @MethodName convertFile
-     * @Description kkFileView 文件上传任务
-     * @Author travis-wei
-     * @Data 2023/8/1
-     * @param
-     * @Return java.io.InputStream
-     **/
     @Override
     public InputStream convertFile() throws Exception {
         // 将文件流转为 MultipartFile
-        MultipartFile multipartFile = new MockMultipartFile(document.getDocMinioId() + "." + document.getDocSuffix(), document.getDocMinioId() + "." + document.getDocSuffix(), document.getDocContentTypeText(), inputStream);
-
-        // 向 kkFileView 服务器发送数据
+        MultipartFile multipartFile = new MockMultipartFile(document.getDocMinioId() + "." + document.getDocSuffix(), document.getDocMinioId() + "." + document.getDocSuffix(), null, inputStream);
+        // 向 ffmpeg 服务器发送请求信息，上传视频文件
         LinkedMultiValueMap<String, Object> multiValueMap = new LinkedMultiValueMap<>();
         multiValueMap.add("file", multipartFile.getResource());
-        String fileUploadUrl = kkProjectUrlPrefix + "fileUpload";
-        String result = restTemplate.postForObject(fileUploadUrl, multiValueMap, String.class);
-        if (!StrUtil.isEmpty(result)) {
-            throw new RuntimeException("To kkFileView 发送数据失败！");
+
+        // 通过 dubbo 远程获取 ffmpeg 服务器上传视频文件的 URL 地址
+        R<?> handleUrlResult = dubboFfmpegService.getHandleUrl();
+        if (!R.checkSuccess(handleUrlResult)) {
+            throw new RuntimeException("获取 ffmpeg 上传视频文件 URL 地址失败！");
         }
-        log.info(result);
+        String handleUrl = (String) handleUrlResult.getData();
+        log.info(handleUrl);
+
+        String result = restTemplate.postForObject(handleUrl, multiValueMap, String.class);
+        if (!StrUtil.isEmpty(result) && !document.getDocMinioId().equals(result)) {
+            throw new RuntimeException("FFMPEG 视频上传，切片失败！");
+        }
         return null;
     }
 
     @Override
     public void updateMysqlData() {
-        // TODO 向数据库中更新 kkFileview 的预览 URL（应经过网关鉴权后进行路由转发）
-        String previewUrl = kkGatewayPreviewPrefix + Base64.encode(document.getDocMinioId() + "." + document.getDocSuffix());
-        UpdateWrapper<Document> updateWrapper = new UpdateWrapper<>();
-        updateWrapper.eq(Document.DOC_MINIO_ID, document.getDocMinioId()).set(Document.DOC_PREVIEW_URL, previewUrl);
-        documentMapper.update(null, updateWrapper);
+        // no action
+        // 无需更新预览 url，视频预览 url 需要携带一次性 token，需要在请求视频预览时，同时获取一次性 token
     }
 
     @Override
     public void uploadFileToEs() throws IOException {
         EsDocument esDocument = new EsDocument();
         esDocument.setMinioId(document.getDocMinioId());
-        // esDocument.setPreviewId();
         esDocument.setFileName(document.getDocName());
         esDocument.setFileDescription(document.getDocDescription());
-        // esDocument.setFileText();
 
         IndexRequest indexRequest = new IndexRequest(DocumentConstants.ES_DOCUMENT_NAME);
         indexRequest.id(esDocument.getMinioId());
@@ -128,13 +107,10 @@ public class TaskKKFileViewConvertServiceImpl implements TaskConvertService {
     @Override
     public void run() {
         try {
-            // 修改文件名称，并将文件上传到 kkFileview 中
+            // 向 ffmpeg 服务器上传视频文件
             convertFile();
-            // 更新数据库中的预览 url 信息
-            updateMysqlData();
             // 将可供检索的文件信息（文件名称、文件描述、文件内容待做）插入到 ElasticSearch 中
             uploadFileToEs();
-
         } catch (Exception e) {
             log.error(e.toString());
             throw new RuntimeException(e.getMessage());

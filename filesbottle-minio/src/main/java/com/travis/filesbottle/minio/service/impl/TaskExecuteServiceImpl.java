@@ -69,9 +69,9 @@ public class TaskExecuteServiceImpl implements TaskExecuteService {
             taskConvertService = new TaskKKFileViewConvertServiceImpl(fileSize, document, inputStream, kkProjectUrlPrefix, kkGatewayPreviewPrefix);
         } else if (type >= 351 && type <= 400) {
             // 处理视频文件
-            taskConvertService = new TaskVideoConvertServiceImpl(fileSize, document, inputStream, ffmpegFilePath);
+            taskConvertService = new TaskVideoConvertServiceImpl(document, inputStream);
         } else {
-            taskConvertService = new TaskNoNeedConvertServiceImpl(fileSize, document, inputStream);
+            taskConvertService = new TaskNoNeedConvertServiceImpl(document);
         }
 
         threadPoolExecutor.execute(taskConvertService);
