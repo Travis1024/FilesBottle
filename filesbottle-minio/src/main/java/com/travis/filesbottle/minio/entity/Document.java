@@ -40,7 +40,7 @@ public class Document extends Model<Document> {
 
     @ApiModelProperty("文档大小")
     @TableField("doc_size")
-    private Object docSize;
+    private Double docSize;
 
     @ApiModelProperty("文档上传时间")
     @TableField("doc_upload_date")

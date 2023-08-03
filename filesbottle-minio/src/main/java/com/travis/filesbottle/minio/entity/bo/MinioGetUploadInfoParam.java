@@ -13,8 +13,8 @@ import lombok.Data;
 public class MinioGetUploadInfoParam {
     private String fileName;
     private String fileMd5;
-    // 单位为 MB
-    private Double fileSize;
+    // 单位为 字节
+    private Long fileSize;
     // 单位为 MB
     private Double chunkSize;
     private String contentType;

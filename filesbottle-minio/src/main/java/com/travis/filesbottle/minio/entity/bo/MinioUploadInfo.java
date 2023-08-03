@@ -18,5 +18,5 @@ public class MinioUploadInfo {
     private String uploadId;
     private LocalDateTime expireTime;
     private List<String> urlList;
-    private Document document;
+    private String minioId;
 }

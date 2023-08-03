@@ -6,6 +6,8 @@ import com.travis.filesbottle.common.enums.BizCodeEnum;
 import com.travis.filesbottle.common.utils.R;
 import com.travis.filesbottle.minio.entity.Document;
 import com.travis.filesbottle.minio.entity.bo.MinioGetUploadInfoParam;
+import com.travis.filesbottle.minio.entity.bo.MinioMergeParam;
+import com.travis.filesbottle.minio.entity.bo.MinioUploadInfo;
 import com.travis.filesbottle.minio.service.MinioService;
 import com.travis.filesbottle.minio.service.TaskExecuteService;
 import com.travis.filesbottle.minio.utils.CustomMinioAsyncClient;
@@ -49,8 +51,6 @@ public class MinioController {
     private MinioService minioService;
     @Autowired
     private TaskExecuteService taskExecuteService;
-    @Autowired
-    private MinioUtil minioUtil;
 
     @ApiOperation(value = "表单向 minio 上传文件（单个文件，无需分片）")
     @PostMapping("/uploadSingle")
@@ -61,7 +61,7 @@ public class MinioController {
         Document document;
 
         try {
-            // 异步上传单个文件
+            // 上传单个文件
             R<?> result = minioService.uploadSingleDoc(userId, userName, property, description, file);
             // 获取上传结果及文件信息
             if (!R.checkSuccess(result)) return result;
@@ -94,23 +94,33 @@ public class MinioController {
 
     @ApiOperation(value = "文件分片合并")
     @PostMapping("/merge")
-    public R<?> mergeUploadParts(@RequestParam("objectName") String objectName, @RequestParam("uploadId") String uploadId) {
+    public R<?> mergeUploadParts(@RequestBody MinioMergeParam minioMergeParam, HttpServletRequest request) {
+
+        String userId = request.getHeader(USER_ID);
+        String userName = request.getHeader(USER_NAME);
+
+        R<Document> merged;
         try {
-            String merged = minioUtil.mergeUploadParts(objectName, uploadId);
-            if (StrUtil.isEmpty(merged)) throw new RuntimeException("合并文件异常！");
-            return R.success();
+            // 分片文件合并
+            merged = minioService.mergeUploadParts(userId, userName, minioMergeParam);
+            if (!R.checkSuccess(merged)) return merged;
+
+            // 合并成功后：异步执行生成预览文件、更新 mysql 数据、更新 ElasticSearch 数据的任务
+            taskExecuteService.generatePreviewFile(minioMergeParam.getMinioGetUploadInfoParam().getFileSize(), merged.getData(), null);
+
         } catch (Exception e) {
             log.error(e.toString());
             return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.UNKNOW, e.getMessage());
         }
+
+        return R.success("文件上传成功！", merged.getData());
     }
 
     @ApiOperation(value = "获取已上传的文件列表")
     @GetMapping("/uploadChunkList")
     public R<?> listUploadChunkList(@RequestParam("objectName") String objectName, @RequestParam("uploadId") String uploadId) {
         try {
-            List<Integer> chunkList = minioUtil.listUploadChunkList(objectName, uploadId);
-            return R.success(chunkList);
+            return minioService.listUploadChunkList(objectName, uploadId);
         } catch (Exception e) {
             log.error(e.toString());
             return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.UNKNOW, e.getMessage());

@@ -5,12 +5,14 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
 import com.travis.filesbottle.common.dubboservice.member.DubboDocUpdateDataService;
 import com.travis.filesbottle.common.dubboservice.member.DubboDocUserInfoService;
+import com.travis.filesbottle.common.dubboservice.member.DubboUserInfoService;
 import com.travis.filesbottle.common.dubboservice.member.bo.DubboDocumentUser;
 import com.travis.filesbottle.common.enums.BizCodeEnum;
 import com.travis.filesbottle.common.utils.R;
 import com.travis.filesbottle.minio.entity.Document;
 import com.travis.filesbottle.minio.entity.Minio;
 import com.travis.filesbottle.minio.entity.bo.MinioGetUploadInfoParam;
+import com.travis.filesbottle.minio.entity.bo.MinioMergeParam;
 import com.travis.filesbottle.minio.entity.bo.MinioUploadInfo;
 import com.travis.filesbottle.minio.mapper.MinioMapper;
 import com.travis.filesbottle.minio.service.DocumentService;
@@ -35,6 +37,7 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -62,6 +65,8 @@ public class MinioServiceImpl extends ServiceImpl<MinioMapper, Minio> implements
     private DubboDocUserInfoService dubboDocUserInfoService;
     @DubboReference
     private DubboDocUpdateDataService dubboDocUpdateDataService;
+    @DubboReference
+    private DubboUserInfoService dubboUserInfoService;
 
 
     @Override
@@ -82,33 +87,15 @@ public class MinioServiceImpl extends ServiceImpl<MinioMapper, Minio> implements
         Document document = (Document) searchedFileByMd5.getData();
         if (document != null) return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.UNKNOW, "该文件已在团队文件中存在！");
 
-        /**
-         * 封装文件信息
-         */
         // 获取文件名的后缀，并全部小写
         String suffix = infoParam.getFileName().substring(infoParam.getFileName().lastIndexOf('.') + 1).toLowerCase();
-
-        document = new Document();
-        document.setDocSize(infoParam.getFileSize());
-        document.setDocMd5(infoParam.getFileMd5());
-        document.setDocName(infoParam.getFileName());
-        document.setDocUploadDate(new Timestamp(new Date().getTime()));
-        // 根据文件后缀获取文件的类型码
-        document.setDocFileTypeCode(FileTypeEnumUtil.getCodeBySuffix(suffix));
-        document.setDocSuffix(suffix);
-        document.setDocDescription(infoParam.getFileDescription());
-        // 为 minio 文件获取 uuid
+        // 生成文档 id
         String minioId = IdUtil.randomUUID();
-        document.setDocMinioId(minioId);
-        document.setDocContentTypeText(infoParam.getContentType());
-        document.setDocUserid(userId);
-        document.setDocTeamid(userInfo.getUserTeamId());
-        document.setDocProperty(infoParam.getFileProperty());
 
         // 计算需要分片的数量，向上取整
-        double partCount = Math.ceil(infoParam.getFileSize() / infoParam.getChunkSize());
+        double partCount = Math.ceil(infoParam.getFileSize() / 1048576.0 / infoParam.getChunkSize());
         MinioUploadInfo minioUploadInfo = minioUtil.initMultiPartUpload(minioId + "." + suffix, (int) partCount, infoParam.getContentType());
-        minioUploadInfo.setDocument(document);
+        minioUploadInfo.setMinioId(minioId);
         return R.success(minioUploadInfo);
     }
 
@@ -199,7 +186,7 @@ public class MinioServiceImpl extends ServiceImpl<MinioMapper, Minio> implements
                 minioAsyncClient.removeObject(
                         RemoveObjectArgs.builder()
                                 .bucket(minioProperties.getBucketName())
-                                .object(file.getOriginalFilename())
+                                .object(minioId + "." + suffix)
                                 .build()
                 );
             } else {
@@ -211,6 +198,67 @@ public class MinioServiceImpl extends ServiceImpl<MinioMapper, Minio> implements
         }
 
         return R.success("文件上传成功！", document);
+    }
+
+    @Override
+    public R<Document> mergeUploadParts(String userId, String userName, MinioMergeParam minioMergeParam) throws InsufficientDataException, IOException, NoSuchAlgorithmException, InvalidKeyException, ExecutionException, XmlParserException, InterruptedException, InternalException {
+
+        MinioGetUploadInfoParam infoParam = minioMergeParam.getMinioGetUploadInfoParam();
+
+        // 查询用户所属团队信息
+        String teamId = dubboUserInfoService.getUserTeamId(userId);
+        if (StrUtil.isEmpty(teamId)) return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.BAD_REQUEST, "当前用户所属团队查询失败！");
+
+        /**
+         * 封装文件信息
+         */
+        // 获取文件名的后缀，并全部小写
+        String suffix = infoParam.getFileName().substring(infoParam.getFileName().lastIndexOf('.') + 1).toLowerCase();
+        Document document = new Document();
+        // 计算文件大小，单位为 MB（1024 * 1024 = 1048576）
+        document.setDocSize(infoParam.getFileSize() / 1048576.0);
+        document.setDocMd5(infoParam.getFileMd5());
+        document.setDocName(infoParam.getFileName());
+        document.setDocUploadDate(new Timestamp(new Date().getTime()));
+        // 根据文件后缀获取文件的类型码
+        document.setDocFileTypeCode(FileTypeEnumUtil.getCodeBySuffix(suffix));
+        document.setDocSuffix(suffix);
+        document.setDocDescription(infoParam.getFileDescription());
+        // 为 minio 文件获取 uuid
+        String minioId = IdUtil.randomUUID();
+        document.setDocMinioId(minioId);
+        document.setDocContentTypeText(infoParam.getContentType());
+        document.setDocUserid(userId);
+        document.setDocTeamid(teamId);
+        document.setDocProperty(infoParam.getFileProperty());
+
+
+        // 合并文件请求
+        String objectName = minioMergeParam.getMinioId() + "." + suffix;
+        String merged = minioUtil.mergeUploadParts(objectName, minioMergeParam.getUploadId());
+        if (StrUtil.isEmpty(merged)) throw new RuntimeException("合并文件异常！");
+
+
+        // 更新 mysql 数据库中的数据信息
+        int result = updateMysqlDataWhenUpload(userId, teamId, infoParam.getFileProperty(), document);
+        // 数据更新失败
+        if (result == 0) {
+            minioAsyncClient.removeObject(
+                    RemoveObjectArgs.builder()
+                            .bucket(minioProperties.getBucketName())
+                            .object(objectName)
+                            .build()
+            );
+            return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.UNKNOW, "mysql数据更新失败，文件上传失败！");
+        }
+        return R.success(document);
+    }
+
+
+    @Override
+    public R<?> listUploadChunkList(String objectName, String uploadId) throws InsufficientDataException, IOException, NoSuchAlgorithmException, InvalidKeyException, ExecutionException, XmlParserException, InterruptedException, InternalException {
+        List<Integer> chunkList = minioUtil.listUploadChunkList(objectName, uploadId);
+        return R.success(chunkList);
     }
 
 

@@ -4,6 +4,13 @@ import com.travis.filesbottle.common.dubboservice.ffmpeg.DubboFfmpegService;
 import com.travis.filesbottle.minio.entity.Document;
 import com.travis.filesbottle.minio.service.TaskExecuteService;
 import com.travis.filesbottle.minio.thread.*;
+import com.travis.filesbottle.minio.utils.CustomMinioAsyncClient;
+import com.travis.filesbottle.minio.utils.MinioProperties;
+import io.minio.GetObjectArgs;
+import io.minio.GetObjectResponse;
+import io.minio.MinioAsyncClient;
+import io.minio.MinioClient;
+import io.minio.errors.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.jodconverter.core.DocumentConverter;
@@ -14,6 +21,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadPoolExecutor;
 
 /**
@@ -29,9 +39,12 @@ public class TaskExecuteServiceImpl implements TaskExecuteService {
 
     @Autowired
     private ThreadPoolExecutor threadPoolExecutor;
-
     @Autowired
     public DocumentConverter documentConverter;
+    @Autowired
+    private MinioClient minioClient;
+    @Autowired
+    private MinioProperties minioProperties;
 
     @DubboReference
     public DubboFfmpegService dubboFfmpegService;
@@ -56,12 +69,23 @@ public class TaskExecuteServiceImpl implements TaskExecuteService {
      * @Return void
      **/
     @Override
-    public void generatePreviewFile(Long fileSize, Document document, InputStream inputStream) {
-
-        TaskConvertService taskConvertService;
+    public void generatePreviewFile(Long fileSize, Document document, InputStream inputStream) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
 
         // 获取文件类型码
         Short type = document.getDocFileTypeCode();
+
+        // 处理 minio 切片文件，从 minio 获取文件流
+        if (inputStream == null && ((type >= 1 && type <= 200) || (type >= 401 && type <= 600) || (type >= 351 && type <= 400))) {
+            inputStream = minioClient.getObject(
+                    GetObjectArgs.builder()
+                            .bucket(minioProperties.getBucketName())
+                            .object(document.getDocMinioId() + "." + document.getDocSuffix())
+                            .build()
+            );
+        }
+
+        TaskConvertService taskConvertService;
+
         // 根据文件类型码判断需要执行的异步任务
         if (type >= 1 && type <= 200) {
             taskConvertService = new TaskFileConvertPdfServiceImpl(fileSize, document, inputStream);
