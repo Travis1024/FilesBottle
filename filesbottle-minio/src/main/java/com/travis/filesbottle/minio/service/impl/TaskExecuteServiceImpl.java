@@ -56,7 +56,7 @@ public class TaskExecuteServiceImpl implements TaskExecuteService {
      * @Return void
      **/
     @Override
-    public void generatePreviewFile(Long fileSize, Document document, InputStream inputStream) throws IOException {
+    public void generatePreviewFile(Long fileSize, Document document, InputStream inputStream) {
 
         TaskConvertService taskConvertService;
 

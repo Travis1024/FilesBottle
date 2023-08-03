@@ -122,7 +122,7 @@ public class MinioUtil {
             throw new RuntimeException("文件合并失败！");
         }
 
-        return objectWriteResponse.region();
+        return objectWriteResponse.toString();
     }
 
 

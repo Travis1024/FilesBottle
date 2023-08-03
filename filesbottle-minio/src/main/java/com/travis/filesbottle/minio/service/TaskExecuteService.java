@@ -13,5 +13,5 @@ import java.io.InputStream;
  * @Data 2023/4/12
  */
 public interface TaskExecuteService {
-    void generatePreviewFile(Long fileSize, Document document, InputStream inputStream) throws IOException;
+    void generatePreviewFile(Long fileSize, Document document, InputStream inputStream);
 }

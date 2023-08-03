@@ -1,6 +1,7 @@
 package com.travis.filesbottle.member.dubboimpl;
 
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.travis.filesbottle.common.dubboservice.member.DubboUserInfoService;
 import com.travis.filesbottle.common.dubboservice.member.bo.DubboMemberUser;
 import com.travis.filesbottle.member.entity.User;
@@ -45,5 +46,16 @@ public class DubboUserInfoServiceImpl implements DubboUserInfoService {
         dubboMemberUser.setUserPassword(user.getUserPassword());
         dubboMemberUser.setUserName(user.getUserName());
         return dubboMemberUser;
+    }
+
+    @Override
+    public String getUserTeamId(String userId) {
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq(User.USER_ID, userId);
+        User user = userMapper.selectOne(queryWrapper);
+        if (user != null) {
+            return user.getUserTeam();
+        }
+        return null;
     }
 }

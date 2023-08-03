@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.travis.filesbottle.common.constant.TokenConstants;
 import com.travis.filesbottle.common.dubboservice.auth.DubboCheckJwtAuthService;
 import com.travis.filesbottle.common.dubboservice.auth.bo.DubboAuthUser;
+import com.travis.filesbottle.common.dubboservice.document.DubboDocInfoService;
+import com.travis.filesbottle.common.dubboservice.member.DubboUserInfoService;
 import com.travis.filesbottle.common.enums.BizCodeEnum;
 import com.travis.filesbottle.common.utils.BizCodeUtil;
 import com.travis.filesbottle.common.utils.R;
@@ -42,13 +44,17 @@ public class CheckJwtAuthFilter implements GlobalFilter, Ordered {
 
     // 设置不需要鉴权的URL路径
     public static final List<String> ALLOW_PATH = new ArrayList<>(Arrays.asList("/api/auth/sso/login", "/knife4j", "/api/member/druid"));
-    public static final String KKFV_PREFIX = "/onlinePreview?url";
+    public static final String KKFV_PREFIX = "/onlinePreview?url=";
     public static final String USER_ID = "userId";
     public static final String USER_NAME = "username";
     public static final String FROM_SOURCE = "from-source";
 
     @DubboReference
     private DubboCheckJwtAuthService dubboCheckJwtAuthService;
+    @DubboReference
+    private DubboUserInfoService dubboUserInfoService;
+    @DubboReference
+    private DubboDocInfoService dubboDocInfoService;
 
 
     @Override
@@ -94,7 +100,27 @@ public class CheckJwtAuthFilter implements GlobalFilter, Ordered {
         String userId = jwtAuthResult.getData().getUserId();
         String username = jwtAuthResult.getData().getUserName();
 
-        // TODO kkFileView 预览请求拦截（检验当前用户是否和请求的文档属于同一团队）
+
+        // 2023.8.3 - kkFileView 预览请求拦截（检验当前用户是否和请求的文档属于同一团队）
+        if (requestUrl.startsWith(KKFV_PREFIX)) {
+            int indexBegin = requestUrl.indexOf('=');
+            int indexEnd = requestUrl.lastIndexOf('.');
+
+            // 获取将要预览的文档所属团队信息
+            String docId = requestUrl.substring(indexBegin + 1, indexEnd);
+            String docTeamId = dubboDocInfoService.getTeamIdByDocId(docId);
+            if (StrUtil.isEmpty(docTeamId)) {
+                return unauthorizedResponse(exchange, serverHttpResponse, BizCodeEnum.BAD_REQUEST);
+            }
+            // 获取当前用户团队信息
+            String userTeamId = dubboUserInfoService.getUserTeamId(userId);
+            if (StrUtil.isEmpty(userTeamId)) {
+                return unauthorizedResponse(exchange, serverHttpResponse, BizCodeEnum.BAD_REQUEST);
+            }
+            if (!docTeamId.equals(userTeamId)) {
+                return unauthorizedResponse(exchange, serverHttpResponse, BizCodeEnum.FORBIDDEN);
+            }
+        }
 
 
         // 设置用户信息到请求

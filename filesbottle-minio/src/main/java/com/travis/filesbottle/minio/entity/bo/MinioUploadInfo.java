@@ -1,5 +1,6 @@
 package com.travis.filesbottle.minio.entity.bo;
 
+import com.travis.filesbottle.minio.entity.Document;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -17,4 +18,5 @@ public class MinioUploadInfo {
     private String uploadId;
     private LocalDateTime expireTime;
     private List<String> urlList;
+    private Document document;
 }

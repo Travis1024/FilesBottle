@@ -10,6 +10,7 @@ import com.travis.filesbottle.minio.service.MinioService;
 import com.travis.filesbottle.minio.service.TaskExecuteService;
 import com.travis.filesbottle.minio.utils.CustomMinioAsyncClient;
 import com.travis.filesbottle.minio.utils.MinioProperties;
+import com.travis.filesbottle.minio.utils.MinioUtil;
 import io.minio.*;
 import io.minio.errors.InsufficientDataException;
 import io.minio.errors.InternalException;
@@ -25,6 +26,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -47,6 +49,8 @@ public class MinioController {
     private MinioService minioService;
     @Autowired
     private TaskExecuteService taskExecuteService;
+    @Autowired
+    private MinioUtil minioUtil;
 
     @ApiOperation(value = "表单向 minio 上传文件（单个文件，无需分片）")
     @PostMapping("/uploadSingle")
@@ -75,20 +79,44 @@ public class MinioController {
 
     @ApiOperation(value = "获取上传 url 等参数 (文件分片)")
     @PostMapping("/getUploadInfo")
-    public R<?> minioGetUploadId(@RequestBody MinioGetUploadInfoParam infoParam) {
+    public R<?> minioGetUploadId(@RequestBody MinioGetUploadInfoParam infoParam, HttpServletRequest request) {
+
+        String userId = request.getHeader(USER_ID);
+        String userName = request.getHeader(USER_NAME);
+
         try {
-            return minioService.minioGetUploadId(infoParam);
+            return minioService.minioGetUploadId(userId, userName, infoParam);
         } catch (Exception e) {
             log.error(e.toString());
             return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.UNKNOW, e.getMessage());
         }
     }
 
-    @ApiOperation(value = "通过文件 MD5 校验文件是否存在")
-    @GetMapping("/checkFile")
-    public R<?> minioCheckFileByMd5(@RequestParam("md5") String md5) {
-        R<?> checkFileByMd5Result = minioService.minioCheckFileByMd5(md5);
-        return null;
+    @ApiOperation(value = "文件分片合并")
+    @PostMapping("/merge")
+    public R<?> mergeUploadParts(@RequestParam("objectName") String objectName, @RequestParam("uploadId") String uploadId) {
+        try {
+            String merged = minioUtil.mergeUploadParts(objectName, uploadId);
+            if (StrUtil.isEmpty(merged)) throw new RuntimeException("合并文件异常！");
+            return R.success();
+        } catch (Exception e) {
+            log.error(e.toString());
+            return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.UNKNOW, e.getMessage());
+        }
     }
+
+    @ApiOperation(value = "获取已上传的文件列表")
+    @GetMapping("/uploadChunkList")
+    public R<?> listUploadChunkList(@RequestParam("objectName") String objectName, @RequestParam("uploadId") String uploadId) {
+        try {
+            List<Integer> chunkList = minioUtil.listUploadChunkList(objectName, uploadId);
+            return R.success(chunkList);
+        } catch (Exception e) {
+            log.error(e.toString());
+            return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.UNKNOW, e.getMessage());
+        }
+    }
+
+
 
 }

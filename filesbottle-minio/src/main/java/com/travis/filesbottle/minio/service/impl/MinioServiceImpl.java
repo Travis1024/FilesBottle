@@ -65,17 +65,53 @@ public class MinioServiceImpl extends ServiceImpl<MinioMapper, Minio> implements
 
 
     @Override
-    public R<?> minioGetUploadId(MinioGetUploadInfoParam infoParam) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, ExecutionException, InvalidKeyException, InterruptedException, XmlParserException, InvalidResponseException, InternalException {
+    public R<?> minioGetUploadId(String userId, String userName, MinioGetUploadInfoParam infoParam) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, ExecutionException, InvalidKeyException, InterruptedException, XmlParserException, InvalidResponseException, InternalException {
+
+        /**
+         * 检查当前用户状态
+         */
+        DubboDocumentUser userInfo = dubboDocUserInfoService.getDocumentUserInfo(userId);
+        if (userInfo == null) return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.BAD_REQUEST, "该用户信息不存在！");
+        if (userInfo.getUserBanning() == 1) return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.FORBIDDEN, "该用户已被封禁，无文件上传权限，请联系管理员！");
+
+        /**
+         * (检查) 根据文件 MD5 是否存在相同的文件
+         */
+        R<?> searchedFileByMd5 = documentService.searchFileByMd5(infoParam.getFileMd5(), userInfo.getUserTeamId());
+        if (!R.checkSuccess(searchedFileByMd5)) return searchedFileByMd5;
+        Document document = (Document) searchedFileByMd5.getData();
+        if (document != null) return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.UNKNOW, "该文件已在团队文件中存在！");
+
+        /**
+         * 封装文件信息
+         */
+        // 获取文件名的后缀，并全部小写
+        String suffix = infoParam.getFileName().substring(infoParam.getFileName().lastIndexOf('.') + 1).toLowerCase();
+
+        document = new Document();
+        document.setDocSize(infoParam.getFileSize());
+        document.setDocMd5(infoParam.getFileMd5());
+        document.setDocName(infoParam.getFileName());
+        document.setDocUploadDate(new Timestamp(new Date().getTime()));
+        // 根据文件后缀获取文件的类型码
+        document.setDocFileTypeCode(FileTypeEnumUtil.getCodeBySuffix(suffix));
+        document.setDocSuffix(suffix);
+        document.setDocDescription(infoParam.getFileDescription());
+        // 为 minio 文件获取 uuid
+        String minioId = IdUtil.randomUUID();
+        document.setDocMinioId(minioId);
+        document.setDocContentTypeText(infoParam.getContentType());
+        document.setDocUserid(userId);
+        document.setDocTeamid(userInfo.getUserTeamId());
+        document.setDocProperty(infoParam.getFileProperty());
+
         // 计算需要分片的数量，向上取整
         double partCount = Math.ceil(infoParam.getFileSize() / infoParam.getChunkSize());
-        MinioUploadInfo minioUploadInfo = minioUtil.initMultiPartUpload(infoParam.getFileName(), (int) partCount, infoParam.getContentType());
+        MinioUploadInfo minioUploadInfo = minioUtil.initMultiPartUpload(minioId + "." + suffix, (int) partCount, infoParam.getContentType());
+        minioUploadInfo.setDocument(document);
         return R.success(minioUploadInfo);
     }
 
-    @Override
-    public R<?> minioCheckFileByMd5(String md5) {
-        return null;
-    }
 
     /**
      * @MethodName uploadSingleDoc
@@ -147,7 +183,7 @@ public class MinioServiceImpl extends ServiceImpl<MinioMapper, Minio> implements
         CompletableFuture<ObjectWriteResponse> completableFuture = minioAsyncClient.putObject(
                 PutObjectArgs.builder()
                         .bucket(minioProperties.getBucketName())
-                        .object(minioId)
+                        .object(minioId + "." + suffix)
                         .stream(file.getInputStream(), file.getSize(), -1)
                         .contentType(file.getContentType())
                         .build()
