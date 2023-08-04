@@ -1,5 +1,7 @@
 package com.travis.filesbottle.minio.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.travis.filesbottle.common.utils.R;
 import com.travis.filesbottle.minio.entity.Document;
 import com.baomidou.mybatisplus.extension.service.IService;
@@ -22,5 +24,11 @@ public interface DocumentService extends IService<Document> {
 
     Document getTeamIdByDocId(String minioId);
 
-    List<Document> listAll();
+    List<Document> listAll(String teamId);
+
+    Page<Document> selectPage(Page<Document> page, QueryWrapper<Document> queryWrapper);
+
+    Document getDocInfoById(String sourceId);
+
+    int deleteMysqlRecord(String sourceId);
 }

@@ -358,8 +358,8 @@ public class VideoController {
         File dirFile = new File(dir);
         // 如果dir对应的文件不存在，或者不是一个目录，则退出
         if ((!dirFile.exists()) || (!dirFile.isDirectory())) {
-            log.info("删除目录失败：" + dir + "不存在！");
-            return false;
+            log.info(dir + "不存在！");
+            return true;
         }
         boolean flag = true;
         // 删除文件夹中的所有文件包括子目录

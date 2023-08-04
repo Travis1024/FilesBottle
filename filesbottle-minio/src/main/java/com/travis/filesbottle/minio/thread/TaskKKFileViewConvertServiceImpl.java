@@ -93,7 +93,7 @@ public class TaskKKFileViewConvertServiceImpl implements TaskConvertService {
 
     @Override
     public void updateMysqlData() {
-        // TODO 向数据库中更新 kkFileview 的预览 URL（应经过网关鉴权后进行路由转发）
+        // 向数据库中更新 kkFileview 的预览 URL（应经过网关鉴权后进行路由转发）
         String previewUrl = kkGatewayPreviewPrefix + Base64.encode(document.getDocMinioId() + "." + document.getDocSuffix());
         UpdateWrapper<Document> updateWrapper = new UpdateWrapper<>();
         updateWrapper.eq(Document.DOC_MINIO_ID, document.getDocMinioId()).set(Document.DOC_PREVIEW_URL, previewUrl);

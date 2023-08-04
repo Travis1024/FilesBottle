@@ -1,9 +1,13 @@
 package com.travis.filesbottle.minio.service.impl;
 
+import cn.hutool.core.codec.Base64;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.travis.filesbottle.common.constant.Constants;
+import com.travis.filesbottle.common.dubboservice.ffmpeg.DubboFfmpegService;
 import com.travis.filesbottle.common.dubboservice.member.DubboDocUpdateDataService;
 import com.travis.filesbottle.common.dubboservice.member.DubboDocUserInfoService;
 import com.travis.filesbottle.common.dubboservice.member.DubboUserInfoService;
@@ -11,6 +15,7 @@ import com.travis.filesbottle.common.dubboservice.member.bo.DubboDocumentUser;
 import com.travis.filesbottle.common.enums.BizCodeEnum;
 import com.travis.filesbottle.common.utils.R;
 import com.travis.filesbottle.minio.entity.Document;
+import com.travis.filesbottle.minio.entity.EsDocument;
 import com.travis.filesbottle.minio.entity.Minio;
 import com.travis.filesbottle.minio.entity.bo.MinioGetUploadInfoParam;
 import com.travis.filesbottle.minio.entity.bo.MinioMergeParam;
@@ -23,22 +28,43 @@ import com.travis.filesbottle.minio.utils.CustomMinioAsyncClient;
 import com.travis.filesbottle.minio.utils.FileTypeEnumUtil;
 import com.travis.filesbottle.minio.utils.MinioProperties;
 import com.travis.filesbottle.minio.utils.MinioUtil;
-import io.minio.ObjectWriteResponse;
-import io.minio.PutObjectArgs;
-import io.minio.RemoveObjectArgs;
+import io.minio.*;
 import io.minio.errors.*;
 import io.seata.spring.annotation.GlobalTransactional;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.config.annotation.DubboReference;
+import org.elasticsearch.action.delete.DeleteRequest;
+import org.elasticsearch.action.delete.DeleteResponse;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.index.query.MultiMatchQueryBuilder;
+import org.elasticsearch.index.query.Operator;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -51,6 +77,7 @@ import java.util.concurrent.ExecutionException;
  * @since 2023-07-31
  */
 @Service
+@Slf4j
 public class MinioServiceImpl extends ServiceImpl<MinioMapper, Minio> implements MinioService {
 
     @Autowired
@@ -58,9 +85,20 @@ public class MinioServiceImpl extends ServiceImpl<MinioMapper, Minio> implements
     @Autowired
     private CustomMinioAsyncClient minioAsyncClient;
     @Autowired
+    private MinioClient minioClient;
+    @Autowired
     private MinioUtil minioUtil;
     @Autowired
     private DocumentService documentService;
+    @Autowired
+    private RestHighLevelClient restHighLevelClient;
+    @Autowired
+    private RestTemplate restTemplate;
+
+    @Value("${kkfileview.delete.urlprefix}")
+    private String kkFileDeletePrefixUrl;
+    @Value("${kkfileview.delete.password}")
+    private String kkFileDeletePassword;
 
     @DubboReference
     private DubboDocUserInfoService dubboDocUserInfoService;
@@ -68,6 +106,8 @@ public class MinioServiceImpl extends ServiceImpl<MinioMapper, Minio> implements
     private DubboDocUpdateDataService dubboDocUpdateDataService;
     @DubboReference
     private DubboUserInfoService dubboUserInfoService;
+    @DubboReference
+    private DubboFfmpegService dubboFfmpegService;
 
 
     @Override
@@ -265,11 +305,274 @@ public class MinioServiceImpl extends ServiceImpl<MinioMapper, Minio> implements
     @Override
     public R<?> listAll(String userId) {
         String userTeamId = dubboUserInfoService.getUserTeamId(userId);
-        if (StrUtil.isEmpty(userTeamId)) throw new RuntimeException("")
-        List<Document> documentList = documentService.listAll();
+        if (StrUtil.isEmpty(userTeamId)) throw new RuntimeException("未查询到当前用户的所属团队");
+        List<Document> documentList = documentService.listAll(userTeamId);
         return R.success(documentList);
     }
 
+    @Override
+    public List<Document> selectAllListByPage(Page<Document> page, QueryWrapper<Document> queryWrapper) {
+        Page<Document> documentPage = documentService.selectPage(page, queryWrapper);
+        return documentPage.getRecords();
+    }
+
+    @Override
+    public R<List<SearchHit>> esDocumentByKeyword(String keyword, String userId) throws IOException {
+        // 查询当前用户所属团队的文件 list
+        R<?> listed = listAll(userId);
+        if (!R.checkSuccess(listed)) throw new RuntimeException(listed.getMessage());
+        List<Document> documentList = (List<Document>) listed.getData();
+        // 存储此团队所有文档 ID 的 set 集合
+        Set<String> hashSet = new HashSet<>();
+        for (Document document : documentList) {
+            hashSet.add(document.getDocMinioId());
+        }
+
+        // ElasticSearch 多字段查询
+        // 1、创建SearchRequest搜索请求，并指定要查询的索引
+        SearchRequest searchRequest = new SearchRequest("document");
+        // 2.1、创建SearchSourceBuilder条件构造
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+
+        // 2.2、MultiMatch查找
+        MultiMatchQueryBuilder multiMatchQueryBuilder = QueryBuilders.multiMatchQuery(keyword, EsDocument.FILE_NAME, EsDocument.FILE_DESCRIPTION);
+        multiMatchQueryBuilder.operator(Operator.OR);
+        searchSourceBuilder.query(multiMatchQueryBuilder);
+
+        // 3、将SearchSourceBuilder添加到 SearchRequest中
+        searchRequest.source(searchSourceBuilder);
+
+        // 4、执行查询
+        SearchResponse searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
+
+        // 5、输出查询时间
+        log.info("ES查询时间为：" + searchResponse.getTook());
+
+        SearchHit[] hits = searchResponse.getHits().getHits();
+        LinkedList<SearchHit> list = new LinkedList<>();
+        for (SearchHit hit : hits) {
+            // 获取文件ID
+            String minioId = (String) hit.getSourceAsMap().get(EsDocument.MINIO_ID);
+            // 如果团队文档中包含此文档的ID信息，则加入list中，并返回
+            if (hashSet.contains(minioId)) {
+                list.add(hit);
+            }
+        }
+        return R.success(list);
+    }
+
+    @Override
+    public ResponseEntity<Object> downloadSourceDocument(String objectName, String fileName, String userId) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
+
+        // 检查用户操作权限
+        String minioId = objectName.substring(0, objectName.lastIndexOf('.'));
+        boolean checked = checkUserAndDocTeam(userId, minioId);
+        if (!checked) {
+            throw new RuntimeException("当前用户无权限操作此文档!");
+        }
+
+        InputStream inputStream = minioClient.getObject(
+                GetObjectArgs.builder()
+                        .bucket(minioProperties.getBucketName())
+                        .object(objectName)
+                        .build()
+        );
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;fileName=" + URLEncoder.encode(fileName, Constants.UTF8))
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(new InputStreamResource(inputStream));
+    }
+
+    @Override
+    public R<?> deleteDocumentById(String sourceId, String userId) {
+        // 查询文档的详细信息
+        Document document = documentService.getDocInfoById(sourceId);
+        if (document == null) throw new RuntimeException("未查询到文档信息！");
+        if (StrUtil.isEmpty(document.getDocUserid())) throw new RuntimeException("未查询到文档创建者信息！");
+        if (!document.getDocUserid().equals(userId)) throw new RuntimeException("无权限，文档只能由创建者删除！");
+
+        // 获取文档类型码，根据文件类型码进行分步处理
+        Short typeCode = document.getDocFileTypeCode();
+        if (typeCode >= 1 && typeCode <= 200) {
+            // 支持转为 pdf 进行预览的文件
+            // (1) 删除 minio 源文件
+            R<?> r1 = deleteMinioFile(sourceId + "." + document.getDocSuffix());
+            // (2) 删除 minio 预览文件
+            R<?> r2 = deleteMinioFile(document.getDocPreviewId() + "." + document.getDocSuffix());
+            // (3) 删除 ElasticSearch 记录
+            R<?> r3 = deleteEsRecord(sourceId);
+            // (4) 删除 mysql 数据
+            R<?> r4 = deleteMysqlRecord(sourceId);
+            // (5) 判断是否均处理成功
+            if (!R.checkSuccess(r1) || !R.checkSuccess(r2) || !R.checkSuccess(r3) || !R.checkSuccess(r4)) {
+                return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.UNKNOW, r1.getMessage() + r2.getMessage() + r3.getMessage() + r4.getMessage());
+            }
+
+        } else if (typeCode >= 351 && typeCode <= 400) {
+            // 视频切片文件
+            // (1) 删除 minio 源文件
+            R<?> r1 = deleteMinioFile(sourceId + "." + document.getDocSuffix());
+            // (2) 删除 视频切片文件
+            boolean deleteVideo = dubboFfmpegService.deleteVideo(sourceId);
+            // (3) 删除 ElasticSearch 记录
+            R<?> r3 = deleteEsRecord(sourceId);
+            // (4) 删除 mysql 数据
+            R<?> r4 = deleteMysqlRecord(sourceId);
+            // (5) 判断是否均处理成功
+            if (!R.checkSuccess(r1) || deleteVideo || !R.checkSuccess(r3) || !R.checkSuccess(r4)) {
+                return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.UNKNOW, r1.getMessage() + r3.getMessage() + r4.getMessage());
+            }
+
+        } else if (typeCode >= 401 && typeCode <= 600) {
+            // 支持使用 kkFileView 进行在线预览的文件
+            // (1) 删除 minio 源文件
+            R<?> r1 = deleteMinioFile(sourceId + "." + document.getDocSuffix());
+            // (2) 删除 kkFileView 预览文件
+            R<?> r2 = deleteKkFileById(sourceId, document.getDocSuffix());
+            // (3) 删除 ElasticSearch 记录
+            R<?> r3 = deleteEsRecord(sourceId);
+            // (4) 删除 mysql 数据
+            R<?> r4 = deleteMysqlRecord(sourceId);
+            // (5) 判断是否均处理成功
+            if (!R.checkSuccess(r1) || !R.checkSuccess(r2) || !R.checkSuccess(r3) || !R.checkSuccess(r4)) {
+                return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.UNKNOW, r1.getMessage() + r2.getMessage() + r3.getMessage() + r4.getMessage());
+            }
+        } else {
+            // 不支持在线预览的文件 or 源文件自身可以预览的文件 or 未知类型的文件
+            // (1) 删除 minio 源文件
+            R<?> r1 = deleteMinioFile(sourceId + "." + document.getDocSuffix());
+            // (2) 删除 ElasticSearch 记录
+            R<?> r2 = deleteEsRecord(sourceId);
+            // (3) 删除 mysql 数据
+            R<?> r3 = deleteMysqlRecord(sourceId);
+            // (4) 判断是否均处理成功
+            if (!R.checkSuccess(r1) || !R.checkSuccess(r2) || !R.checkSuccess(r3)) {
+                return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.UNKNOW, r1.getMessage() + r2.getMessage() + r3.getMessage());
+            }
+        }
+        return R.success();
+    }
+
+    @Override
+    public R<?> getPreviewStream(String sourceId, String userId, HttpServletResponse response) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
+        // 一、首先查找该源文件信息是否存在，如果不存在直接返回文件不存在的 error 信息
+        Document document = documentService.getDocInfoById(sourceId);
+        if (document == null) throw new RuntimeException("未找到该文件信息！");
+
+        // 二、[情况一：文件不支持在线预览] 判断该源文件的类型是否支持在线预览，如果不支持在线预览，返回状态码 18905 (document模块 + 不支持预览)
+        Short typeCode = document.getDocFileTypeCode();
+        if (typeCode == null || typeCode == 0 || typeCode == -1 || (typeCode >= 601 && typeCode <= 1000)) {
+            return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.FILE_NOT_SUPPORT_PREVIEW);
+        }
+        // 三、分别处理支持预览的文件信息
+
+        if (typeCode >= 1 && typeCode <= 200) {
+            // [情况二：文件支持 pdf 预览文件预览]
+            response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+            response.setContentType(MediaType.APPLICATION_PDF_VALUE);
+            // 获取源文件流
+            InputStream inputStream = minioClient.getObject(
+                    GetObjectArgs.builder()
+                            .bucket(minioProperties.getBucketName())
+                            .object(document.getDocPreviewId() + "." + document.getDocSuffix())
+                            .build()
+            );
+            OutputStream outputStream = response.getOutputStream();
+            byte[] bytes = new byte[4096];
+            while ((inputStream.read(bytes)) != -1) {
+                outputStream.write(bytes);
+            }
+            outputStream.flush();
+            inputStream.close();
+            outputStream.close();
+        } else if (typeCode >= 201 && typeCode <= 350) {
+            // [情况三：文件支持源文件在线预览，返回源文件流]
+            response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+            response.setContentType(document.getDocContentTypeText());
+            // 获取源文件流
+            InputStream inputStream = minioClient.getObject(
+                    GetObjectArgs.builder()
+                            .bucket(minioProperties.getBucketName())
+                            .object(document.getDocMinioId() + "." + document.getDocSuffix())
+                            .build()
+            );
+            OutputStream outputStream = response.getOutputStream();
+            byte[] bytes = new byte[4096];
+            while ((inputStream.read(bytes)) != -1) {
+                outputStream.write(bytes);
+            }
+            outputStream.flush();
+            inputStream.close();
+            outputStream.close();
+        } else if (typeCode >= 351 && typeCode <= 400) {
+            // [情况四：ffmpeg 视频文件在线预览] 视频文件预览请求
+            String videoUrl = dubboFfmpegService.getVideoUrl(sourceId, userId);
+            if (StrUtil.isEmpty(videoUrl)) throw new RuntimeException("获取视频预览地址失败！");
+            return R.success(videoUrl);
+        } else if (typeCode >= 401 && typeCode <= 600) {
+            // [情况五：文件支持 kkFileView 在线预览]
+            if (StrUtil.isEmpty(document.getDocPreviewUrl())) throw new RuntimeException("该文件多对应的预览文件获取失败！");
+            return R.success(document.getDocPreviewUrl());
+        }
+
+        return R.success();
+    }
+
+    private R<?> deleteKkFileById(String sourceId, String suffix) {
+        try {
+            String fileName = Base64.encode(sourceId + "." + suffix);
+            // 拼接完整字符串
+            String resultUrl = kkFileDeletePrefixUrl + fileName + "&password" + kkFileDeletePassword;
+            // 发送删除 kkfile 文件请求
+            String forObject = restTemplate.getForObject(resultUrl, String.class);
+            log.info(forObject);
+        } catch (Exception e) {
+            log.error(e.toString());
+            return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.UNKNOW, e.getMessage());
+        }
+        return R.success();
+    }
+
+    private R<?> deleteMysqlRecord(String sourceId) {
+        try {
+            int delete = documentService.deleteMysqlRecord(sourceId);
+            if (delete == 0) throw new RuntimeException("数据库-文档数据删除失败！");
+        } catch (Exception e) {
+            log.error(e.toString());
+            return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.UNKNOW, e.getMessage());
+        }
+        return R.success();
+    }
+
+    private R<?> deleteEsRecord(String sourceId) {
+        try {
+            // 创建删除文档的请求，并指定索引和 id 值
+            DeleteRequest deleteRequest = new DeleteRequest().index("document").id(sourceId);
+            DeleteResponse delete = restHighLevelClient.delete(deleteRequest, RequestOptions.DEFAULT);
+            log.info(delete.toString());
+        } catch (Exception e) {
+            log.error(e.toString());
+            return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.UNKNOW, e.getMessage());
+        }
+        return R.success();
+    }
+
+
+    private R<?> deleteMinioFile(String objectName) {
+        try {
+            minioClient.removeObject(
+                    RemoveObjectArgs.builder()
+                            .bucket(minioProperties.getBucketName())
+                            .object(objectName)
+                            .build()
+            );
+        } catch (Exception e) {
+            log.error(e.toString());
+            return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.UNKNOW, e.getMessage());
+        }
+        return R.success();
+    }
 
     /**
      * @MethodName updateMysqlDataWhenUpload

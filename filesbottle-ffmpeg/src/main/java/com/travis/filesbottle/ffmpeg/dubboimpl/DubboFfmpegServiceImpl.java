@@ -34,7 +34,7 @@ public class DubboFfmpegServiceImpl implements DubboFfmpegService {
 
     @Override
     public String getVideoUrl(String sourceId, String userId) {
-        // TODO dubbo远程调用auth模块生成 token， 需要请求生成一次性 token (存到 redis 中)
+        // dubbo 远程调用 auth 模块生成 token， 需要请求生成一次性 token (存到 redis 中)
         R<?> onceTokenR = dubboCreateOnceTokenService.createOnceToken(sourceId, userId);
         if (!R.checkSuccess(onceTokenR)) return null;
         String token = (String) onceTokenR.getData();
