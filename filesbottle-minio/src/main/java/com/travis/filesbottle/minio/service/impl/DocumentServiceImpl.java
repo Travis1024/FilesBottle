@@ -9,6 +9,8 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 /**
  * <p>
  *  服务实现类
@@ -34,5 +36,17 @@ public class DocumentServiceImpl extends ServiceImpl<DocumentMapper, Document> i
     @Override
     public void insertOne(Document document) {
         documentMapper.insert(document);
+    }
+
+    @Override
+    public Document getTeamIdByDocId(String minioId) {
+        QueryWrapper<Document> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq(Document.DOC_MINIO_ID, minioId);
+        return documentMapper.selectOne(queryWrapper);
+    }
+
+    @Override
+    public List<Document> listAll() {
+        return documentMapper.selectList(null);
     }
 }

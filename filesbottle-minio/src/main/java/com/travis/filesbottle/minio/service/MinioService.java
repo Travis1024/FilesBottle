@@ -32,4 +32,6 @@ public interface MinioService extends IService<Minio> {
     R<Document> mergeUploadParts(String userId, String userName, MinioMergeParam minioMergeParam) throws InsufficientDataException, IOException, NoSuchAlgorithmException, InvalidKeyException, ExecutionException, XmlParserException, InterruptedException, InternalException;
 
     R<?> listUploadChunkList(String objectName, String uploadId) throws InsufficientDataException, IOException, NoSuchAlgorithmException, InvalidKeyException, ExecutionException, XmlParserException, InterruptedException, InternalException;
+
+    R<?> listAll(String userId);
 }

@@ -3,6 +3,7 @@ package com.travis.filesbottle.minio.service.impl;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.travis.filesbottle.common.dubboservice.member.DubboDocUpdateDataService;
 import com.travis.filesbottle.common.dubboservice.member.DubboDocUserInfoService;
 import com.travis.filesbottle.common.dubboservice.member.DubboUserInfoService;
@@ -261,6 +262,14 @@ public class MinioServiceImpl extends ServiceImpl<MinioMapper, Minio> implements
         return R.success(chunkList);
     }
 
+    @Override
+    public R<?> listAll(String userId) {
+        String userTeamId = dubboUserInfoService.getUserTeamId(userId);
+        if (StrUtil.isEmpty(userTeamId)) throw new RuntimeException("")
+        List<Document> documentList = documentService.listAll();
+        return R.success(documentList);
+    }
+
 
     /**
      * @MethodName updateMysqlDataWhenUpload
@@ -288,6 +297,27 @@ public class MinioServiceImpl extends ServiceImpl<MinioMapper, Minio> implements
             return 0;
         }
         return 1;
+    }
+
+    /**
+     * @MethodName checkUserAndDocTeam
+     * @Description 判断当前用户是否有权限处理当前文档
+     * @Author travis-wei
+     * @Data 2023/8/3
+     * @param userId
+     * @param minioId
+     * @Return boolean
+     **/
+    private boolean checkUserAndDocTeam(String userId, String minioId) {
+        String userTeamId = dubboUserInfoService.getUserTeamId(userId);
+        if (StrUtil.isEmpty(userTeamId)) return false;
+        Document document = documentService.getTeamIdByDocId(minioId);
+        if ("public".equals(document.getDocProperty())) {
+            return true;
+        } else if ("private".equals(document.getDocProperty())) {
+            return userTeamId.equals(document.getDocTeamid());
+        }
+        return false;
     }
 
 }

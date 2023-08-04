@@ -21,11 +21,13 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
@@ -51,6 +53,51 @@ public class MinioController {
     private MinioService minioService;
     @Autowired
     private TaskExecuteService taskExecuteService;
+
+    @ApiOperation(value = "根据page查询文件列表 (当前团队所属文档)")
+    @GetMapping("/list/{pageSize}/{pageCurrent}")
+    public R<?> list(@PathVariable Integer pageSize, @PathVariable Integer pageCurrent) {
+
+    }
+
+    @ApiOperation(value = "查询当前团队中的文件列表")
+    @GetMapping("/listAll")
+    public R<?> listAll(HttpServletRequest request) {
+        String userId = request.getHeader(USER_ID);
+        String userName = request.getHeader(USER_NAME);
+
+        try {
+            return minioService.listAll(userId);
+        } catch (Exception e) {
+            log.error(e.toString());
+            return R.error(BizCodeEnum.MOUDLE_DOCUMENT, BizCodeEnum.UNKNOW, e.getMessage());
+        }
+    }
+
+    @ApiOperation(value = "根据关键词ElasticSearch文档")
+    @GetMapping("/search")
+    public R<?> esDocumentByKeyword(@RequestParam("keyword") String keyword, HttpServletRequest request) {
+
+    }
+
+    @ApiOperation(value = "获取预览文件，maybe 不支持在线预览｜pdf在线预览｜源文件在线预览｜kkFileView的url在线预览")
+    @GetMapping("/stream/preview")
+    public R<?> getPreviewStream(@RequestParam("sourceId") String sourceId, HttpServletRequest request) throws UnsupportedEncodingException {
+
+    }
+
+    @ApiOperation(value = "文件删除接口，分三种情况：支持转为pdf进行在线预览 ｜ 支持使用kkFileView在线预览 ｜ 其他（不支持在线预览、源文件流即可预览、未知类型）")
+    @DeleteMapping("/delete/document")
+    public R<?> deleteDocumentById(@RequestParam("sourceId") String sourceId) {
+
+    }
+
+    @ApiOperation(value = "根据源文件ID下载源文件")
+    @GetMapping("/download/source")
+    public ResponseEntity<Object> downloadSourceDocument(@RequestParam("sourceId") String sourceId) throws UnsupportedEncodingException {
+
+    }
+
 
     @ApiOperation(value = "表单向 minio 上传文件（单个文件，无需分片）")
     @PostMapping("/uploadSingle")
@@ -116,7 +163,7 @@ public class MinioController {
         return R.success("文件上传成功！", merged.getData());
     }
 
-    @ApiOperation(value = "获取已上传的文件列表")
+    @ApiOperation(value = "获取已上传的文件切片列表")
     @GetMapping("/uploadChunkList")
     public R<?> listUploadChunkList(@RequestParam("objectName") String objectName, @RequestParam("uploadId") String uploadId) {
         try {
