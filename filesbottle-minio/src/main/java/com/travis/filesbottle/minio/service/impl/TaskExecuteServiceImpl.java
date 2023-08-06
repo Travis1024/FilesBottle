@@ -4,11 +4,8 @@ import com.travis.filesbottle.common.dubboservice.ffmpeg.DubboFfmpegService;
 import com.travis.filesbottle.minio.entity.Document;
 import com.travis.filesbottle.minio.service.TaskExecuteService;
 import com.travis.filesbottle.minio.thread.*;
-import com.travis.filesbottle.minio.utils.CustomMinioAsyncClient;
 import com.travis.filesbottle.minio.utils.MinioProperties;
 import io.minio.GetObjectArgs;
-import io.minio.GetObjectResponse;
-import io.minio.MinioAsyncClient;
 import io.minio.MinioClient;
 import io.minio.errors.*;
 import lombok.extern.slf4j.Slf4j;
@@ -17,13 +14,11 @@ import org.jodconverter.core.DocumentConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadPoolExecutor;
 
 /**
